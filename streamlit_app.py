@@ -14,7 +14,6 @@ def main():
         ["CII Calculator", "Heel Calculator", "BOG Calculator"]
     )
     
-    # Main content area
     if calculator_choice == "CII Calculator":
         show_cii_calculator()
     elif calculator_choice == "Heel Calculator":
