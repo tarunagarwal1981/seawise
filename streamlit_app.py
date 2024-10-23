@@ -20,7 +20,7 @@ st.markdown("""
         max-width: 100%;
         background-color: #132337;
         font-family: 'Nunito', sans-serif !important;
-        font-size: 12px;
+        font-size: 14px;
         color: #F4F4F4;
     }
     
