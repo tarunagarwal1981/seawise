@@ -108,7 +108,7 @@ st.markdown("""
         padding: 1rem;
         border-radius: 0.5rem;
         font-family: 'Nunito', sans-serif !important;
-        font-size: 12px !important;
+        font-size: 14px !important;
         color: #F4F4F4 !important;
     }
     
