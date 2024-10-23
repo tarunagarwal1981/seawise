@@ -6,6 +6,14 @@ st.set_page_config(page_title="Seawise Calculators", layout="wide", page_icon="ð
 # Import calculators
 from calculators.cii_calculator import show_cii_calculator
 
+import streamlit as st
+
+# Set page config at the very start
+st.set_page_config(page_title="Seawise Calculators", layout="wide", page_icon="ðŸš¢")
+
+# Import calculators
+from calculators.cii_calculator import show_cii_calculator
+
 # Add custom CSS to control sidebar width and main content
 st.markdown("""
     <style>
@@ -139,8 +147,80 @@ st.markdown("""
         font-family: 'Nunito', sans-serif !important;
         color: #F4F4F4 !important;
     }
+
+    /* Top bar styling */
+    header {
+        background-color: #132337 !important;
+    }
+
+    /* Top bar buttons */
+    .st-emotion-cache-h5rgaw {
+        background-color: #132337 !important;
+    }
+
+    /* Hide decoration */
+    .decoration {
+        background-color: #132337 !important;
+    }
+
+    /* Top bar icons/elements */
+    .st-emotion-cache-1dp5vir {
+        background-color: #132337 !important;
+        color: #F4F4F4 !important;
+    }
+
+    /* View toolbar */
+    .st-emotion-cache-r421ms {
+        background-color: #132337 !important;
+    }
+
+    /* All top bar elements */
+    .st-emotion-cache-1avcm0n, .st-emotion-cache-2door3 {
+        background-color: #132337 !important;
+        color: #F4F4F4 !important;
+    }
+
+    /* Main content area */
+    .main .block-container {
+        padding-top: 2rem !important;
+        max-width: 95% !important;
+    }
+
+    /* Ensure all icons in header are white */
+    header .st-emotion-cache-1dp5vir svg {
+        color: #F4F4F4 !important;
+    }
+
+    /* Style the top right menu */
+    .st-emotion-cache-v4z8rs {
+        background-color: #132337 !important;
+    }
+
+    /* Additional button styles for hover states */
+    .stButton > button:active {
+        transform: scale(0.98);
+    }
     </style>
     """, unsafe_allow_html=True)
+
+def main():
+    with st.sidebar:
+        st.title("Navigation")
+        calculator_choice = st.radio(
+            "Select Calculator",
+            ["CII Calculator", "Heel Calculator", "BOG Calculator"],
+            label_visibility="collapsed"
+        )
+    
+    if calculator_choice == "CII Calculator":
+        show_cii_calculator()
+    elif calculator_choice == "Heel Calculator":
+        st.title("Heel Calculator - Coming Soon")
+    elif calculator_choice == "BOG Calculator":
+        st.title("BOG Calculator - Coming Soon")
+
+if __name__ == "__main__":
+    main()
 
 def main():
     with st.sidebar:
