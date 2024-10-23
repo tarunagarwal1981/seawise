@@ -1,5 +1,5 @@
 import streamlit as st
-from calculators.cii_calculator import cii_calculator
+from calculators.cii_calculator import show_cii_calculator
 
 def main():
     st.sidebar.title("Navigation")
