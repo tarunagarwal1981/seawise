@@ -273,7 +273,7 @@ def show_cii_calculator():
         background-color: #00AAFF !important;
         color: #0F1824 !important;
         font-family: 'Nunito', sans-serif !important;
-        font-size: 12px !important;
+        font-size: 14px !important;
         font-weight: 600 !important;
     }
     
@@ -465,7 +465,7 @@ def show_cii_calculator():
             background-color: #00AAFF !important;
             color: #0F1824 !important;
             font-family: 'Nunito', sans-serif !important;
-            font-size: 12px !important;
+            font-size: 14px !important;
             font-weight: 600 !important;
             border: none !important;
             border-radius: 4px !important;
