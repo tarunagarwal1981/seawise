@@ -6,13 +6,6 @@ st.set_page_config(page_title="Seawise Calculators", layout="wide", page_icon="ð
 # Import calculators
 from calculators.cii_calculator import show_cii_calculator
 
-import streamlit as st
-
-# Set page config at the very start
-st.set_page_config(page_title="Seawise Calculators", layout="wide", page_icon="ðŸš¢")
-
-# Import calculators
-from calculators.cii_calculator import show_cii_calculator
 
 # Add custom CSS to control sidebar width and main content
 st.markdown("""
