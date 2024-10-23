@@ -9,7 +9,28 @@ from calculators.cii_calculator import show_cii_calculator
 # Add custom CSS to control sidebar width and main content
 st.markdown("""
     <style>
-    /* Previous CSS remains the same */
+    /* Import Nunito font */
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
+    
+    /* Global styles */
+    .main > div {
+        padding-left: 2rem;
+        padding-right: 2rem;
+        max-width: 100%;
+        background-color: #132337;
+        font-family: 'Nunito', sans-serif !important;
+        font-size: 12px;
+        color: #F4F4F4;
+    }
+    
+    /* Sidebar styles */
+    .stSidebar > div {
+        width: 270px;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        background-color: #132337;
+        color: #F4F4F4;
+    }
     
     /* Button styles */
     .stButton > button {
@@ -17,28 +38,106 @@ st.markdown("""
         color: #0F1824 !important;
         font-family: 'Nunito', sans-serif !important;
         font-size: 12px !important;
+        font-weight: 600 !important;
         border: none !important;
-        padding: 0.5rem 1rem !important;
         border-radius: 4px !important;
+        padding: 0.5rem 1rem !important;
     }
     
-    /* Button hover state */
     .stButton > button:hover {
-        background-color: #0099EA !important;  /* Slightly darker shade for hover */
+        background-color: #0095e0 !important;
         color: #0F1824 !important;
     }
     
-    /* Number input step buttons */
-    .stNumberInput button {
-        background-color: #00AAFF !important;
-        color: #0F1824 !important;
+    /* Main container styles */
+    .block-container {
+        max-width: 95% !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+        background-color: #132337;
     }
     
-    /* Disabled button state */
-    .stButton > button:disabled {
-        background-color: #004C73 !important;  /* Darker shade for disabled state */
-        color: #0F1824 !important;
-        opacity: 0.7;
+    /* App background */
+    .stApp {
+        background-color: #132337;
+    }
+    
+    /* Text styles */
+    p, label, span, div {
+        font-family: 'Nunito', sans-serif !important;
+        font-size: 12px !important;
+        color: #F4F4F4 !important;
+    }
+    
+    /* Header styles */
+    h1, h2, h3, h4, h5, h6, .st-emotion-cache-10trblm {
+        font-family: 'Nunito', sans-serif !important;
+        color: #F4F4F4 !important;
+    }
+    
+    /* Radio buttons and navigation */
+    .st-emotion-cache-16idsys {
+        font-family: 'Nunito', sans-serif !important;
+        color: #F4F4F4 !important;
+    }
+    
+    /* Input fields */
+    .stTextInput > div > div {
+        font-family: 'Nunito', sans-serif !important;
+        color: #F4F4F4 !important;
+        background-color: rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    /* Number input */
+    .stNumberInput > div > div {
+        font-family: 'Nunito', sans-serif !important;
+        color: #F4F4F4 !important;
+        background-color: rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    /* Data editor */
+    .st-emotion-cache-1eqh1f1 {
+        font-family: 'Nunito', sans-serif !important;
+        color: #F4F4F4 !important;
+    }
+    
+    /* Metric cards */
+    .metric-card {
+        background-color: rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        border-radius: 0.5rem;
+        font-family: 'Nunito', sans-serif !important;
+        font-size: 12px !important;
+        color: #F4F4F4 !important;
+    }
+    
+    /* Sidebar navigation */
+    section[data-testid="stSidebar"] {
+        width: 270px !important;
+        background-color: #132337;
+    }
+    
+    /* Column layouts */
+    [data-testid="column"] {
+        width: 100% !important;
+    }
+    
+    /* DataFrame */
+    .stDataFrame {
+        width: 100% !important;
+    }
+    
+    /* Select boxes and dropdowns */
+    .stSelectbox > div > div {
+        font-family: 'Nunito', sans-serif !important;
+        color: #F4F4F4 !important;
+        background-color: rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    /* Radio buttons */
+    .st-emotion-cache-1k5q1ln {
+        font-family: 'Nunito', sans-serif !important;
+        color: #F4F4F4 !important;
     }
     </style>
     """, unsafe_allow_html=True)
