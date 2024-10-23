@@ -10,7 +10,6 @@ import searoute as sr
 from fuzzywuzzy import process
 
 def show_cii_calculator():
-    
     # Database configuration
     DB_CONFIG = {
         'host': 'aws-0-ap-south-1.pooler.supabase.com',
@@ -28,9 +27,6 @@ def show_cii_calculator():
     }
     
     # Streamlit page config
-    #st.set_page_config(page_title="CII Calculator", layout="wide", page_icon="🚢")
-    
-    # Apply custom CSS
     st.markdown("""
         <style>
         .stApp {
@@ -48,7 +44,7 @@ def show_cii_calculator():
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         </style>
-        """, unsafe_allow_html=True)
+        "", unsafe_allow_html=True)
     
     # Initialize session state
     if 'cii_data' not in st.session_state:
@@ -92,7 +88,6 @@ def show_cii_calculator():
     # Your existing database query function remains the same
     def get_vessel_data(engine, vessel_name, year):
         """Fetch vessel data from database"""
-        # Your existing query remains the same
         query = text("""
         SELECT 
             t1."VESSEL_NAME" AS "Vessel",
@@ -313,214 +308,210 @@ def show_cii_calculator():
             st.error(f"Error calculating projected CII: {str(e)}")
             return None
     
-    def main():
-        st.title('🚢 CII Calculator')
-    
-        # Load world ports data
-        world_ports_data = load_world_ports()
-    
-        # User inputs for vessel and year
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            vessel_name = st.text_input("Enter Vessel Name")
-            calculate_clicked = st.button('Calculate Current CII')
-        with col2:
-            year = st.number_input('Year for CII Calculation', 
-                                  min_value=2023, 
-                                  max_value=date.today().year, 
-                                  value=date.today().year)
-      
-           
-    
-        # Calculate current CII
-        if calculate_clicked and vessel_name:
-            engine = get_db_engine()
-            df = get_vessel_data(engine, vessel_name, year)
-            
-            if not df.empty:
-                vessel_type = df['vessel_type'].iloc[0]
-                imo_ship_type = VESSEL_TYPE_MAPPING.get(vessel_type)
-                capacity = df['capacity'].iloc[0]
-                attained_aer = df['Attained_AER'].iloc[0]
-    
-                if imo_ship_type and attained_aer is not None:
-                    reference_cii = calculate_reference_cii(capacity, imo_ship_type)
-                    required_cii = calculate_required_cii(reference_cii, year)
-                    cii_rating = calculate_cii_rating(attained_aer, required_cii)
-                    
-                    st.session_state.cii_data = {
-                        'attained_aer': attained_aer,
-                        'required_cii': required_cii,
-                        'cii_rating': cii_rating,
-                        'total_distance': df['total_distance'].iloc[0],
-                        'co2_emission': df['CO2Emission'].iloc[0],
-                        'capacity': capacity,
-                        'vessel_type': vessel_type,
-                        'imo_ship_type': imo_ship_type
-                    }
-                else:
-                    if imo_ship_type is None:
-                        st.error(f"The vessel type '{vessel_type}' is not supported for CII calculations.")
-                    if attained_aer is None:
-                        st.error("Unable to calculate Attained AER. Please check the vessel's data.")
-            else:
-                st.error(f"No data found for vessel {vessel_name} in year {year}")
-    
-        # Display current CII results if available
-        if st.session_state.cii_data:
-            st.markdown("### Current CII Metrics")
-            col1, col2, col3, col4, col5 = st.columns(5)
-            with col1:
-                st.metric('Attained AER', 
-                         f"{st.session_state.cii_data['attained_aer']:.4f}")
-            with col2:
-                st.metric('Required CII', 
-                         f"{st.session_state.cii_data['required_cii']:.4f}")
-            with col3:
-                st.metric('CII Rating', 
-                         st.session_state.cii_data['cii_rating'])
-            with col4:
-                st.metric('Total Distance (NM)', 
-                         f"{st.session_state.cii_data['total_distance']:,.0f}")
-            with col5:
-                st.metric('CO2 Emission (MT)', 
-                         f"{st.session_state.cii_data['co2_emission']:,.1f}")
-    
-        # Voyage Planning Section - Always visible
-        st.markdown("### Voyage Planning")
+    # Main logic for Streamlit app
+    st.title('🚢 CII Calculator')
+
+    # Load world ports data
+    world_ports_data = load_world_ports()
+
+    # User inputs for vessel and year
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        vessel_name = st.text_input("Enter Vessel Name")
+        calculate_clicked = st.button('Calculate Current CII')
+    with col2:
+        year = st.number_input('Year for CII Calculation', 
+                              min_value=2023, 
+                              max_value=date.today().year, 
+                              value=date.today().year)
+  
+    # Calculate current CII
+    if calculate_clicked and vessel_name:
+        engine = get_db_engine()
+        df = get_vessel_data(engine, vessel_name, year)
         
-        # Split layout for table and map
-        left_col, right_col = st.columns([7, 5])
-    
-        # Route information table
-        with left_col:
-            st.markdown("#### Route Information")
-            
-            # Create DataFrame for route information
-            port_data_df = pd.DataFrame(
-                st.session_state.port_table_data,
-                columns=["From Port", "To Port", "Port Days", "Speed (knots)", 
-                        "Fuel Used (mT)", "Fuel Type"]
-            )
-            
-            # Data editor for route planning
-            edited_df = st.data_editor(
-                port_data_df,
-                num_rows="dynamic",
-                key="port_table_editor",
-                column_config={
-                    "From Port": st.column_config.TextColumn(
-                        "From Port",
-                        help="Enter departure port name",
-                        required=True
-                    ),
-                    "To Port": st.column_config.TextColumn(
-                        "To Port",
-                        help="Enter arrival port name",
-                        required=True
-                    ),
-                    "Port Days": st.column_config.NumberColumn(
-                        "Port Days",
-                        help="Enter number of days in port",
-                        min_value=0,
-                        max_value=100,
-                        step=0.5,
-                        required=True
-                    ),
-                    "Speed (knots)": st.column_config.NumberColumn(
-                        "Speed (knots)",
-                        help="Enter vessel speed in knots",
-                        min_value=1,
-                        max_value=30,
-                        step=0.1,
-                        required=True
-                    ),
-                    "Fuel Used (mT)": st.column_config.NumberColumn(
-                        "Fuel Used (mT/d)",
-                        help="Enter total fuel consumption",
-                        min_value=0,
-                        step=0.1,
-                        required=True
-                    ),
-                    "Fuel Type": st.column_config.SelectboxColumn(
-                        "Fuel Type",
-                        help="Select fuel type",
-                        options=list(EMISSION_FACTORS.keys()),
-                        required=True
-                    )
-                }
-            )
-            
-            # Update session state with edited data
-            st.session_state.port_table_data = edited_df.values.tolist()
-    
-        # Map display
-        with right_col:
-            if len(st.session_state.port_table_data) >= 1:
-                ports = [row[0] for row in st.session_state.port_table_data if row[0]]
-                if st.session_state.port_table_data[-1][1]:  # Add last destination
-                    ports.append(st.session_state.port_table_data[-1][1])
+        if not df.empty:
+            vessel_type = df['vessel_type'].iloc[0]
+            imo_ship_type = VESSEL_TYPE_MAPPING.get(vessel_type)
+            capacity = df['capacity'].iloc[0]
+            attained_aer = df['Attained_AER'].iloc[0]
+
+            if imo_ship_type and attained_aer is not None:
+                reference_cii = calculate_reference_cii(capacity, imo_ship_type)
+                required_cii = calculate_required_cii(reference_cii, year)
+                cii_rating = calculate_cii_rating(attained_aer, required_cii)
                 
-                if len(ports) >= 2:
-                    m = plot_route(ports, world_ports_data)
-                else:
-                    m = folium.Map(location=[0, 0], zoom_start=2)
+                st.session_state.cii_data = {
+                    'attained_aer': attained_aer,
+                    'required_cii': required_cii,
+                    'cii_rating': cii_rating,
+                    'total_distance': df['total_distance'].iloc[0],
+                    'co2_emission': df['CO2Emission'].iloc[0],
+                    'capacity': capacity,
+                    'vessel_type': vessel_type,
+                    'imo_ship_type': imo_ship_type
+                }
+            else:
+                if imo_ship_type is None:
+                    st.error(f"The vessel type '{vessel_type}' is not supported for CII calculations.")
+                if attained_aer is None:
+                    st.error("Unable to calculate Attained AER. Please check the vessel's data.")
+        else:
+            st.error(f"No data found for vessel {vessel_name} in year {year}")
+
+    # Display current CII results if available
+    if st.session_state.cii_data:
+        st.markdown("### Current CII Metrics")
+        col1, col2, col3, col4, col5 = st.columns(5)
+        with col1:
+            st.metric('Attained AER', 
+                     f"{st.session_state.cii_data['attained_aer']:.4f}")
+        with col2:
+            st.metric('Required CII', 
+                     f"{st.session_state.cii_data['required_cii']:.4f}")
+        with col3:
+            st.metric('CII Rating', 
+                     st.session_state.cii_data['cii_rating'])
+        with col4:
+            st.metric('Total Distance (NM)', 
+                     f"{st.session_state.cii_data['total_distance']:,.0f}")
+        with col5:
+            st.metric('CO2 Emission (MT)', 
+                     f"{st.session_state.cii_data['co2_emission']:,.1f}")
+
+    # Voyage Planning Section - Always visible
+    st.markdown("### Voyage Planning")
+    
+    # Split layout for table and map
+    left_col, right_col = st.columns([7, 5])
+
+    # Route information table
+    with left_col:
+        st.markdown("#### Route Information")
+        
+        # Create DataFrame for route information
+        port_data_df = pd.DataFrame(
+            st.session_state.port_table_data,
+            columns=["From Port", "To Port", "Port Days", "Speed (knots)", 
+                    "Fuel Used (mT)", "Fuel Type"]
+        )
+        
+        # Data editor for route planning
+        edited_df = st.data_editor(
+            port_data_df,
+            num_rows="dynamic",
+            key="port_table_editor",
+            column_config={
+                "From Port": st.column_config.TextColumn(
+                    "From Port",
+                    help="Enter departure port name",
+                    required=True
+                ),
+                "To Port": st.column_config.TextColumn(
+                    "To Port",
+                    help="Enter arrival port name",
+                    required=True
+                ),
+                "Port Days": st.column_config.NumberColumn(
+                    "Port Days",
+                    help="Enter number of days in port",
+                    min_value=0,
+                    max_value=100,
+                    step=0.5,
+                    required=True
+                ),
+                "Speed (knots)": st.column_config.NumberColumn(
+                    "Speed (knots)",
+                    help="Enter vessel speed in knots",
+                    min_value=1,
+                    max_value=30,
+                    step=0.1,
+                    required=True
+                ),
+                "Fuel Used (mT)": st.column_config.NumberColumn(
+                    "Fuel Used (mT/d)",
+                    help="Enter total fuel consumption",
+                    min_value=0,
+                    step=0.1,
+                    required=True
+                ),
+                "Fuel Type": st.column_config.SelectboxColumn(
+                    "Fuel Type",
+                    help="Select fuel type",
+                    options=list(EMISSION_FACTORS.keys()),
+                    required=True
+                )
+            }
+        )
+        
+        # Update session state with edited data
+        st.session_state.port_table_data = edited_df.values.tolist()
+
+    # Map display
+    with right_col:
+        if len(st.session_state.port_table_data) >= 1:
+            ports = [row[0] for row in st.session_state.port_table_data if row[0]]
+            if st.session_state.port_table_data[-1][1]:  # Add last destination
+                ports.append(st.session_state.port_table_data[-1][1])
+            
+            if len(ports) >= 2:
+                m = plot_route(ports, world_ports_data)
             else:
                 m = folium.Map(location=[0, 0], zoom_start=2)
+        else:
+            m = folium.Map(location=[0, 0], zoom_start=2)
+        
+        st_folium(m, width=None, height=400)
+
+    # Calculate projected CII button - disabled if no current CII data
+    if st.button('Calculate Projected CII', 
+                 disabled=not bool(st.session_state.cii_data),
+                 help="Current CII calculation required before projecting future CII"):
+        if len(st.session_state.port_table_data) >= 1:
+            # Calculate metrics for each voyage segment
+            voyage_calculations = []
+            for row in st.session_state.port_table_data:
+                segment_metrics = calculate_segment_metrics(row, world_ports_data)
+                if segment_metrics:
+                    voyage_calculations.append(segment_metrics)
             
-            st_folium(m, width=None, height=400)
-    
-        # Calculate projected CII button - disabled if no current CII data
-        if st.button('Calculate Projected CII', 
-                     disabled=not bool(st.session_state.cii_data),
-                     help="Current CII calculation required before projecting future CII"):
-            if len(st.session_state.port_table_data) >= 1:
-                # Calculate metrics for each voyage segment
-                voyage_calculations = []
-                for row in st.session_state.port_table_data:
-                    segment_metrics = calculate_segment_metrics(row, world_ports_data)
-                    if segment_metrics:
-                        voyage_calculations.append(segment_metrics)
+            if voyage_calculations:
+                # Calculate projected CII
+                projections = calculate_projected_cii(st.session_state.cii_data, voyage_calculations)
                 
-                if voyage_calculations:
-                    # Calculate projected CII
-                    projections = calculate_projected_cii(st.session_state.cii_data, voyage_calculations)
+                if projections:
+                    # Display segment calculations
+                    st.markdown("#### Voyage Segment Calculations")
+                    segment_df = pd.DataFrame(voyage_calculations)
+                    st.dataframe(segment_df)
                     
-                    if projections:
-                        # Display segment calculations
-                        st.markdown("#### Voyage Segment Calculations")
-                        segment_df = pd.DataFrame(voyage_calculations)
-                        st.dataframe(segment_df)
-                        
-                        # Display projected metrics
-                        st.markdown("#### Projected CII Metrics")
-                        col1, col2, col3 = st.columns(3)
-                        with col1:
-                            st.metric("Projected AER", 
-                                    f"{projections['projected_aer']:.4f}", 
-                                    f"{projections['projected_aer'] - st.session_state.cii_data['attained_aer']:.4f}")
-                        with col2:
-                            projected_rating = calculate_cii_rating(
-                                projections['projected_aer'], 
-                                st.session_state.cii_data['required_cii']
-                            )
-                            st.metric("Projected CII Rating", projected_rating)
-                        with col3:
-                            st.metric("Additional CO2 (MT)", 
-                                    f"{projections['new_co2']:,.1f}")
-                        
-                        # Display totals
-                        st.markdown("#### Total Impact")
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            st.metric("Total Distance (NM)", 
-                                    f"{projections['total_distance']:,.0f}", 
-                                    f"+{projections['new_distance']:,.0f}")
-                        with col2:
-                            st.metric("Total CO2 (MT)", 
-                                    f"{projections['total_co2']:,.1f}", 
-                                    f"+{projections['new_co2']:,.1f}")
-            else:
-                st.warning("Please add at least one voyage segment to calculate projections.")
-    
-  
+                    # Display projected metrics
+                    st.markdown("#### Projected CII Metrics")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Projected AER", 
+                                f"{projections['projected_aer']:.4f}", 
+                                f"{projections['projected_aer'] - st.session_state.cii_data['attained_aer']:.4f}")
+                    with col2:
+                        projected_rating = calculate_cii_rating(
+                            projections['projected_aer'], 
+                            st.session_state.cii_data['required_cii']
+                        )
+                        st.metric("Projected CII Rating", projected_rating)
+                    with col3:
+                        st.metric("Additional CO2 (MT)", 
+                                f"{projections['new_co2']:,.1f}")
+                    
+                    # Display totals
+                    st.markdown("#### Total Impact")
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.metric("Total Distance (NM)", 
+                                f"{projections['total_distance']:,.0f}", 
+                                f"+{projections['new_distance']:,.0f}")
+                    with col2:
+                        st.metric("Total CO2 (MT)", 
+                                f"{projections['total_co2']:,.1f}", 
+                                f"+{projections['new_co2']:,.1f}")
+        else:
+            st.warning("Please add at least one voyage segment to calculate projections.")
