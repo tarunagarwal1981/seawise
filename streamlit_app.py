@@ -9,31 +9,98 @@ from calculators.cii_calculator import show_cii_calculator
 # Add custom CSS to control sidebar width and main content
 st.markdown("""
     <style>
+    /* Import Nunito font */
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
+    
+    /* Global styles */
     .main > div {
         padding-left: 2rem;
         padding-right: 2rem;
-        max-width: 100%;  /* Allow main content to use full width */
+        max-width: 100%;
+        background-color: #132337;
+        font-family: 'Nunito', sans-serif;
+        font-size: 12px;
+        color: #F4F4F4;
     }
+    
+    /* Sidebar styles */
     .stSidebar > div {
         width: 270px;
         padding-left: 1rem;
         padding-right: 1rem;
+        background-color: #132337;
+        font-family: 'Nunito', sans-serif;
+        color: #F4F4F4;
     }
+    
     section[data-testid="stSidebar"] {
         width: 270px !important;
+        background-color: #132337;
     }
-    /* Make main container use more width */
+    
+    /* Main container styles */
     .block-container {
         max-width: 95% !important;
         padding-left: 2rem !important;
         padding-right: 2rem !important;
     }
-    /* Adjust the data editor and map container widths */
+    
+    /* Column styles */
     [data-testid="column"] {
         width: 100% !important;
     }
+    
+    /* DataFrame styles */
     .stDataFrame {
         width: 100% !important;
+    }
+    
+    /* Generic text styles */
+    p, label, .streamlit-expanderHeader {
+        font-family: 'Nunito', sans-serif !important;
+        font-size: 12px !important;
+        color: #F4F4F4 !important;
+    }
+    
+    /* Header styles */
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'Nunito', sans-serif !important;
+        color: #F4F4F4 !important;
+    }
+    
+    /* Navigation and radio button text */
+    .st-emotion-cache-16idsys {
+        font-family: 'Nunito', sans-serif !important;
+        color: #F4F4F4 !important;
+    }
+    
+    /* Titles */
+    .st-emotion-cache-10trblm {
+        font-family: 'Nunito', sans-serif !important;
+        color: #F4F4F4 !important;
+    }
+    
+    /* Adjust global background */
+    .stApp {
+        background-color: #132337;
+    }
+    
+    /* Input fields */
+    .stTextInput > div > div {
+        font-family: 'Nunito', sans-serif !important;
+        color: #F4F4F4 !important;
+    }
+    
+    /* Button text */
+    .stButton > button {
+        font-family: 'Nunito', sans-serif !important;
+        font-size: 12px !important;
+    }
+    
+    /* DataEditor text */
+    .st-emotion-cache-1eqh1f1 {
+        font-family: 'Nunito', sans-serif !important;
+        color: #F4F4F4 !important;
     }
     </style>
     """, unsafe_allow_html=True)
