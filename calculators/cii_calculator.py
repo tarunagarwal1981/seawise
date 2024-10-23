@@ -458,6 +458,22 @@ def show_cii_calculator():
         
         st_folium(m, width=None, height=400)
 
+
+    st.markdown("""
+        <style>
+        div[data-testid="stButton"] button[kind="secondary"] {
+            background-color: #00AAFF !important;
+            color: #0F1824 !important;
+            font-family: 'Nunito', sans-serif !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            border: none !important;
+            border-radius: 4px !important;
+            padding: 0.5rem 1rem !important;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+    
     # Calculate projected CII button
     # New code with styled button
     col1, col2, col3 = st.columns([1, 3, 1])
