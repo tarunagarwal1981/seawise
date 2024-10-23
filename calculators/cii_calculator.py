@@ -313,7 +313,7 @@ def show_cii_calculator():
     world_ports_data = load_world_ports()
 
     # User inputs for vessel and year
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4, col5, col6 = st.columns(6)
     with col1:
         vessel_name = st.text_input("Enter Vessel Name")
         calculate_clicked = st.button('Calculate Current CII')
