@@ -12,6 +12,7 @@ st.markdown("""
     .main > div {
         padding-left: 2rem;
         padding-right: 2rem;
+        max-width: 100%;  /* Allow main content to use full width */
     }
     .stSidebar > div {
         width: 270px;
@@ -20,6 +21,19 @@ st.markdown("""
     }
     section[data-testid="stSidebar"] {
         width: 270px !important;
+    }
+    /* Make main container use more width */
+    .block-container {
+        max-width: 95% !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+    }
+    /* Adjust the data editor and map container widths */
+    [data-testid="column"] {
+        width: 100% !important;
+    }
+    .stDataFrame {
+        width: 100% !important;
     }
     </style>
     """, unsafe_allow_html=True)
