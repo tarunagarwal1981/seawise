@@ -1,6 +1,9 @@
 import streamlit as st
 from calculators.cii_calculator import show_cii_calculator
 
+# Set page config at the very start
+st.set_page_config(page_title="Seawise Calculators", layout="wide", page_icon="🚢")
+
 def main():
     st.sidebar.title("Navigation")
     
