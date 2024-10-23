@@ -266,12 +266,10 @@ def calculate_projected_cii(current_data, voyage_calculations):
 def show_cii_calculator():
     """Main function to show CII calculator interface"""
     
-    # Apply custom CSS
     st.markdown("""
         <style>
         .stApp {
             max-width: 1200px;
-            margin: 0 auto;
         }
         .stButton > button {
             background-color: #4CAF50;
@@ -282,6 +280,11 @@ def show_cii_calculator():
             padding: 1rem;
             border-radius: 0.5rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        /* Remove any margin that might be causing the misalignment */
+        .block-container {
+            padding-top: 1rem;
+            max-width: none;
         }
         </style>
         """, unsafe_allow_html=True)
