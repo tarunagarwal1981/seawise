@@ -28,7 +28,7 @@ def show_cii_calculator():
     }
     
     # Streamlit page config
-    st.set_page_config(page_title="CII Calculator", layout="wide", page_icon="🚢")
+    #st.set_page_config(page_title="CII Calculator", layout="wide", page_icon="🚢")
     
     # Apply custom CSS
     st.markdown("""
