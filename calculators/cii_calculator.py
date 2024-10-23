@@ -267,27 +267,35 @@ def show_cii_calculator():
     """Main function to show CII calculator interface"""
     
     st.markdown("""
-        <style>
-        .stApp {
-            max-width: 100%;
-        }
-        .stButton > button {
-            background-color: #4CAF50;
-            color: white;
-        }
-        .metric-card {
-            background-color: #f8f9fa;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        /* Remove any margin that might be causing the misalignment */
-        .block-container {
-            padding-top: 1rem;
-            max-width: none;
-        }
-        </style>
-        """, unsafe_allow_html=True)
+    <style>
+    /* Keep your existing button and metric card styles */
+    .stButton > button {
+        background-color: #4CAF50;
+        color: white;
+        font-family: 'Nunito', sans-serif !important;
+        font-size: 12px !important;
+    }
+    .metric-card {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        font-family: 'Nunito', sans-serif !important;
+        font-size: 12px !important;
+    }
+    
+    /* Additional styles for consistency */
+    .st-emotion-cache-10trblm {
+        font-family: 'Nunito', sans-serif !important;
+        color: #F4F4F4 !important;
+    }
+    
+    .st-emotion-cache-16idsys {
+        font-family: 'Nunito', sans-serif !important;
+        color: #F4F4F4 !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
     
     # Initialize session state
     if 'cii_data' not in st.session_state:
