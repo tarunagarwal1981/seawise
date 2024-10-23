@@ -269,7 +269,7 @@ def show_cii_calculator():
     st.markdown("""
         <style>
         .stApp {
-            max-width: 1200px;
+            max-width: 1500px;
         }
         .stButton > button {
             background-color: #4CAF50;
