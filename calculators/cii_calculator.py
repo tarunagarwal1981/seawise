@@ -268,31 +268,37 @@ def show_cii_calculator():
     
     st.markdown("""
     <style>
-    /* Keep your existing button and metric card styles */
+    /* Previous CSS styles */
+    
+    /* Button styles */
     .stButton > button {
-        background-color: #4CAF50;
-        color: white;
+        background-color: #00AAFF !important;
+        color: #0F1824 !important;
         font-family: 'Nunito', sans-serif !important;
         font-size: 12px !important;
-    }
-    .metric-card {
-        background-color: #f8f9fa;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        font-family: 'Nunito', sans-serif !important;
-        font-size: 12px !important;
+        border: none !important;
+        padding: 0.5rem 1rem !important;
+        border-radius: 4px !important;
     }
     
-    /* Additional styles for consistency */
-    .st-emotion-cache-10trblm {
-        font-family: 'Nunito', sans-serif !important;
-        color: #F4F4F4 !important;
+    /* Calculate button hover state */
+    .stButton > button:hover {
+        background-color: #0099EA !important;
+        color: #0F1824 !important;
     }
     
-    .st-emotion-cache-16idsys {
-        font-family: 'Nunito', sans-serif !important;
-        color: #F4F4F4 !important;
+    /* Specific styles for Calculate Current CII and Calculate Projected CII buttons */
+    [data-testid="stButton"] > button {
+        background-color: #00AAFF !important;
+        color: #0F1824 !important;
+        width: 100%;  /* Make buttons full width */
+    }
+    
+    /* Disabled button state */
+    .stButton > button:disabled {
+        background-color: #004C73 !important;
+        color: #0F1824 !important;
+        opacity: 0.7;
     }
     </style>
     """, unsafe_allow_html=True)
