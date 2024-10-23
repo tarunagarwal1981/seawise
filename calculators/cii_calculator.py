@@ -459,9 +459,14 @@ def show_cii_calculator():
         st_folium(m, width=None, height=400)
 
     # Calculate projected CII button
-    if st.button('Calculate Projected CII', 
-                 disabled=not bool(st.session_state.cii_data),
-                 help="Current CII calculation required before projecting future CII"):
+    # New code with styled button
+col1, col2, col3 = st.columns([1, 3, 1])
+with col2:
+    calculate_projected = st.button('Calculate Projected CII', 
+                                  disabled=not bool(st.session_state.cii_data),
+                                  help="Current CII calculation required before projecting future CII",
+                                  use_container_width=True)
+if calculate_projected:
         if len(st.session_state.port_table_data) >= 1:
             voyage_calculations = []
             for row in st.session_state.port_table_data:
