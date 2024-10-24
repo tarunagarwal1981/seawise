@@ -587,5 +587,3 @@ def show_cii_calculator():
                         projections['total_distance'],
                         projections['total_co2']
                     ), unsafe_allow_html=True)
-        else:
-            st.warning("Please add at least one voyage segment to calculate projections.")
