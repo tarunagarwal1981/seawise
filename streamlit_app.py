@@ -17,7 +17,7 @@ st.markdown("""
     .main > div {
         padding-left: 2rem;
         padding-right: 2rem;
-        max-width: 100%;
+        max-width: 80%;
         background-color: #132337;
         font-family: 'Nunito', sans-serif !important;
         font-size: 14px;
