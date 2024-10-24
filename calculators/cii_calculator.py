@@ -433,7 +433,7 @@ def show_cii_calculator():
         )
 
     # Split layout for table and map
-    left_col, right_col = st.columns([7, 5])
+    left_col, right_col = st.columns([6, 6])
 
     # Route information table
     with left_col:
