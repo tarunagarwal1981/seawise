@@ -318,6 +318,19 @@ def show_cii_calculator():
         color: #F4F4F4;
         font-weight: 600;
     }
+
+    /* Container for bottom alignment */
+    .button-column {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-end !important;
+        padding-top: 22px !important;  /* Offset for missing label */
+    }
+    
+    /* Hide default Streamlit label space */
+    .st-emotion-cache-16idsys p {
+        margin-bottom: 0px !important;
+        
     </style>
     """, unsafe_allow_html=True)
     
@@ -345,9 +358,15 @@ def show_cii_calculator():
                               max_value=date.today().year, 
                               value=date.today().year)
 
-    with col6:
-        st.markdown("<div class='placeholder-text'>xxxx</div>", unsafe_allow_html=True)
-        calculate_clicked = st.button('Calculate Current CII')
+    with col3:
+        st.markdown('<div class="button-column">', unsafe_allow_html=True)
+        calculate_clicked = st.button(
+            'Calculate Current CII', 
+            use_container_width=True, 
+            key='calculate_current_cii_button', 
+            help='Calculate the current CII metrics based on the vessel and year input.'
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
         
 
     # Calculate current CII
