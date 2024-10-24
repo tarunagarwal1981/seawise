@@ -418,7 +418,19 @@ def show_cii_calculator():
 
     # Voyage Planning Section
     st.markdown("### Voyage Planning")
-    
+
+    # Calculate projected CII button
+    # New code with styled button
+    col1, col2 = st.columns([7, 1])
+    with col2:
+        calculate_projected = st.button(
+            'Calculate Projected CII', 
+            disabled=not bool(st.session_state.cii_data),
+            help="Current CII calculation required before projecting future CII",
+            use_container_width=True,
+            key="calculate_projected_cii_button"  # Unique key
+        )
+
     # Split layout for table and map
     left_col, right_col = st.columns([7, 5])
 
@@ -513,17 +525,6 @@ def show_cii_calculator():
         </style>
     """, unsafe_allow_html=True)
     
-    # Calculate projected CII button
-    # New code with styled button
-    col1, col2, col3 = st.columns([1, 3, 1])
-    with col1:
-        calculate_projected = st.button(
-            'Calculate Projected CII', 
-            disabled=not bool(st.session_state.cii_data),
-            help="Current CII calculation required before projecting future CII",
-            use_container_width=True,
-            key="calculate_projected_cii_button"  # Unique key
-        )
     if calculate_projected:
         if len(st.session_state.port_table_data) >= 1:
             voyage_calculations = []
