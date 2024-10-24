@@ -197,22 +197,29 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 def main():
-    with st.sidebar:
-        st.title("Navigation")
-        # Add a unique key to the radio button
-        calculator_choice = st.radio(
-            "Select Calculator",
-            ["CII Calculator", "Heel Calculator", "BOG Calculator"],
-            label_visibility="collapsed",
-            key="calculator_selector"  # Added unique key
-        )
-    
-    if calculator_choice == "CII Calculator":
-        show_cii_calculator()
-    elif calculator_choice == "Heel Calculator":
-        st.title("Heel Calculator - Coming Soon")
-    elif calculator_choice == "BOG Calculator":
-        st.title("BOG Calculator - Coming Soon")
+    # Directly show the CII Calculator
+    show_cii_calculator()
 
 if __name__ == "__main__":
     main()
+
+# def main():
+#     with st.sidebar:
+#         st.title("Navigation")
+#         # Add a unique key to the radio button
+#         calculator_choice = st.radio(
+#             "Select Calculator",
+#             ["CII Calculator", "Heel Calculator", "BOG Calculator"],
+#             label_visibility="collapsed",
+#             key="calculator_selector"  # Added unique key
+#         )
+    
+#     if calculator_choice == "CII Calculator":
+#         show_cii_calculator()
+#     elif calculator_choice == "Heel Calculator":
+#         st.title("Heel Calculator - Coming Soon")
+#     elif calculator_choice == "BOG Calculator":
+#         st.title("BOG Calculator - Coming Soon")
+
+# if __name__ == "__main__":
+#     main()
