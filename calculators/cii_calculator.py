@@ -417,7 +417,7 @@ def show_cii_calculator():
         ), unsafe_allow_html=True)
 
     # Voyage Planning Section
-    st.markdown("### Voyage Planning")
+    #st.markdown("### Voyage Planning")
 
     # Calculate projected CII button
     # New code with styled button
