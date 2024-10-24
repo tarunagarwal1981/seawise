@@ -302,10 +302,12 @@ def show_cii_calculator():
         color: #132337 !important;
     }
 
-    /* Add vertical boundaries to columns */
+    /* Add vertical and horizontal boundaries to columns */
     .stMetric {
         border-left: 1px solid #F4F4F4;
+        border-bottom: 1px solid #F4F4F4;
         padding-left: 1rem;
+        padding-bottom: 1rem;
     }
     </style>
     """, unsafe_allow_html=True)
