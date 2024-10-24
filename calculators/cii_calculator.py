@@ -301,6 +301,12 @@ def show_cii_calculator():
     .placeholder-text {
         color: #132337 !important;
     }
+
+    /* Add vertical boundaries to columns */
+    .metric-container {
+        border-left: 1px solid #F4F4F4;
+        padding-left: 1rem;
+    }
     </style>
     """, unsafe_allow_html=True)
     
@@ -368,24 +374,31 @@ def show_cii_calculator():
             st.error(f"No data found for vessel {vessel_name} in year {year}")
 
     # Display current CII results if available
-    if st.session_state.cii_data:
+     # Display current CII results if available
+    if st.session_state.get('cii_data'):
         st.markdown("### Current CII Metrics")
         col1, col2, col3, col4, col5 = st.columns(5)
         with col1:
-            st.metric('Attained AER', 
-                     f"{st.session_state.cii_data['attained_aer']:.4f}")
+            st.markdown("<div class='metric-container'>", unsafe_allow_html=True)
+            st.metric('Attained AER', f"{st.session_state.cii_data['attained_aer']:.4f}")
+            st.markdown("</div>", unsafe_allow_html=True)
         with col2:
-            st.metric('Required CII', 
-                     f"{st.session_state.cii_data['required_cii']:.4f}")
+            st.markdown("<div class='metric-container'>", unsafe_allow_html=True)
+            st.metric('Required CII', f"{st.session_state.cii_data['required_cii']:.4f}")
+            st.markdown("</div>", unsafe_allow_html=True)
         with col3:
-            st.metric('CII Rating', 
-                     st.session_state.cii_data['cii_rating'])
+            st.markdown("<div class='metric-container'>", unsafe_allow_html=True)
+            st.metric('CII Rating', st.session_state.cii_data['cii_rating'])
+            st.markdown("</div>", unsafe_allow_html=True)
         with col4:
-            st.metric('Total Distance (NM)', 
-                     f"{st.session_state.cii_data['total_distance']:,.0f}")
+            st.markdown("<div class='metric-container'>", unsafe_allow_html=True)
+            st.metric('Total Distance (NM)', f"{st.session_state.cii_data['total_distance']:,.0f}")
+            st.markdown("</div>", unsafe_allow_html=True)
         with col5:
-            st.metric('CO2 Emission (MT)', 
-                     f"{st.session_state.cii_data['co2_emission']:,.1f}")
+            st.markdown("<div class='metric-container'>", unsafe_allow_html=True)
+            st.metric('CO2 Emission (MT)', f"{st.session_state.cii_data['co2_emission']:,.1f}")
+            st.markdown("</div>", unsafe_allow_html=True)
+
 
     # Voyage Planning Section
     st.markdown("### Voyage Planning")
