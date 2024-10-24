@@ -297,11 +297,6 @@ def show_cii_calculator():
         color: #F4F4F4 !important;
     }
 
-    /* Custom placeholder above button */
-    .placeholder-text {
-        color: #132337 !important;
-    }
-
     /* Table styles */
     .metrics-table {
         width: 100%;
@@ -317,6 +312,15 @@ def show_cii_calculator():
         background-color: #6E6E6E;
         color: #F4F4F4;
         font-weight: 600;
+    }
+
+    /* Custom container for button alignment */
+    .button-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        height: 100%;
+        padding-bottom: 1px;  /* Fine-tune this value if needed */
     }
     </style>
     """, unsafe_allow_html=True)
@@ -336,24 +340,29 @@ def show_cii_calculator():
 
     # User inputs for vessel and year
     col1, col2, col3, col4, col5, col6 = st.columns(6)
+    
     with col1:
-        vessel_name = st.text_input("Enter Vessel Name")
+        st.markdown("Enter Vessel Name")  # Label
+        vessel_name = st.text_input("", label_visibility="collapsed")
         
     with col2:
-        year = st.number_input('Year for CII Calculation', 
+        st.markdown("Year for CII Calculation")  # Label
+        year = st.number_input('', 
                               min_value=2023, 
                               max_value=date.today().year, 
-                              value=date.today().year)
+                              value=date.today().year,
+                              label_visibility="collapsed")
 
     with col3:
-        st.markdown("<div class='placeholder-text'>xxxx</div>", unsafe_allow_html=True)
-        # Fixed the button syntax
+        st.markdown("<div class='button-container'>", unsafe_allow_html=True)
         calculate_clicked = st.button(
             'Calculate Current CII', 
             use_container_width=True, 
             key='calculate_current_cii_button', 
             help='Calculate the current CII metrics based on the vessel and year input.'
         )
+        st.markdown("</div>", unsafe_allow_html=True)
+
 
     # Calculate current CII
     if calculate_clicked and vessel_name:
