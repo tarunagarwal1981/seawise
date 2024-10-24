@@ -323,6 +323,10 @@ def show_cii_calculator():
                               max_value=date.today().year, 
                               value=date.today().year)
 
+    with col:
+        vessel_name = st.text_input("Enter Vessel Name")
+        
+
     # Calculate current CII
     if calculate_clicked and vessel_name:
         engine = get_db_engine()
