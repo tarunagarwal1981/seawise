@@ -314,7 +314,7 @@ def show_cii_calculator():
         text-align: center;
     }
     .metrics-table th {
-        background-color: #132337;
+        background-color: #6E6E6E;
         color: #F4F4F4;
         font-weight: 600;
     }
