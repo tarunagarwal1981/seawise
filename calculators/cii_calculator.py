@@ -291,7 +291,7 @@ def show_cii_calculator():
         display: flex !important;
         flex-direction: column !important;
         justify-content: flex-end !important;
-        padding-top: 22px !important;  /* Offset for missing label */
+        padding-top: 28px !important;  /* Offset for missing label */
     }
     
     /* Hide default Streamlit label space */
@@ -315,7 +315,7 @@ def show_cii_calculator():
     world_ports_data = load_world_ports()
 
     # User inputs for vessel and year
-    col1, col2, col3 = st.columns([2, 2, 2])
+    col1, col2, col3, col4, col5, col6 = st.columns(6)
     
     with col1:
         st.markdown('<p class="input-label">Enter Vessel Name</p>', unsafe_allow_html=True)
