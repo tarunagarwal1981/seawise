@@ -297,7 +297,7 @@ def show_cii_calculator():
         color: #F4F4F4 !important;
     }
 
-     /* Custom placeholder above button */
+    /* Custom placeholder above button */
     .placeholder-text {
         color: #132337 !important;
     }
@@ -347,8 +347,13 @@ def show_cii_calculator():
 
     with col3:
         st.markdown("<div class='placeholder-text'>xxxx</div>", unsafe_allow_html=True)
-        calculate_clicked = <div style='display: flex; align-items: flex-end;'>st.button('Calculate Current CII', use_container_width=True, key='calculate_current_cii_button', help='Calculate the current CII metrics based on the vessel and year input.')</div>
-        
+        # Fixed the button syntax
+        calculate_clicked = st.button(
+            'Calculate Current CII', 
+            use_container_width=True, 
+            key='calculate_current_cii_button', 
+            help='Calculate the current CII metrics based on the vessel and year input.'
+        )
 
     # Calculate current CII
     if calculate_clicked and vessel_name:
