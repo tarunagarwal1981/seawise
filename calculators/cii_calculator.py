@@ -514,40 +514,8 @@ def show_cii_calculator():
         
         st.session_state.port_table_data = edited_df.values.tolist()
 
-    # Map display
-    with right_col:
-        if len(st.session_state.port_table_data) >= 1:
-            ports = [row[0] for row in st.session_state.port_table_data if row[0]]
-            if st.session_state.port_table_data[-1][1]:
-                ports.append(st.session_state.port_table_data[-1][1])
-            
-            if len(ports) >= 2:
-                m = plot_route(ports, world_ports_data)
-            else:
-                m = folium.Map(location=[0, 0], zoom_start=2)
-        else:
-            m = folium.Map(location=[0, 0], zoom_start=2)
-        
-        st_folium(m, width=None, height=400)
-
-
-    st.markdown("""
-        <style>
-        div[data-testid="stButton"] button[kind="secondary"] {
-            background-color: #00AAFF !important;
-            color: #0F1824 !important;
-            font-family: 'Nunito', sans-serif !important;
-            font-size: 14px !important;
-            font-weight: 600 !important;
-            border: none !important;
-            border-radius: 4px !important;
-            padding: 0.5rem 1rem !important;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-    
-    if calculate_projected:
-        if len(st.session_state.port_table_data) >= 1:
+        # Display Projected CII Metrics table here
+        if calculate_projected and st.session_state.port_table_data:
             voyage_calculations = []
             for row in st.session_state.port_table_data:
                 segment_metrics = calculate_segment_metrics(row, world_ports_data)
@@ -587,3 +555,35 @@ def show_cii_calculator():
                         projections['total_distance'],
                         projections['total_co2']
                     ), unsafe_allow_html=True)
+
+    # Map display
+    with right_col:
+        if len(st.session_state.port_table_data) >= 1:
+            ports = [row[0] for row in st.session_state.port_table_data if row[0]]
+            if st.session_state.port_table_data[-1][1]:
+                ports.append(st.session_state.port_table_data[-1][1])
+            
+            if len(ports) >= 2:
+                m = plot_route(ports, world_ports_data)
+            else:
+                m = folium.Map(location=[0, 0], zoom_start=2)
+        else:
+            m = folium.Map(location=[0, 0], zoom_start=2)
+        
+        st_folium(m, width=None, height=400)
+
+
+    st.markdown("""
+        <style>
+        div[data-testid="stButton"] button[kind="secondary"] {
+            background-color: #00AAFF !important;
+            color: #0F1824 !important;
+            font-family: 'Nunito', sans-serif !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            border: none !important;
+            border-radius: 4px !important;
+            padding: 0.5rem 1rem !important;
+        }
+        </style>
+    """, unsafe_allow_html=True)
