@@ -275,6 +275,7 @@ def show_cii_calculator():
         font-family: 'Nunito', sans-serif !important;
         font-size: 14px !important;
         font-weight: 600 !important;
+        margin-top: 24px !important;  /* Added to match the spacing in the image */
     }
     
     .metric-card {
@@ -284,6 +285,14 @@ def show_cii_calculator():
         font-family: 'Nunito', sans-serif !important;
         font-size: 12px !important;
         color: #F4F4F4 !important;
+    }
+    
+    /* Input label styling */
+    .input-label {
+        color: #F4F4F4 !important;
+        font-size: 14px !important;
+        margin-bottom: 8px !important;
+        font-family: 'Nunito', sans-serif !important;
     }
     
     /* Calculator specific text */
@@ -313,15 +322,6 @@ def show_cii_calculator():
         color: #F4F4F4;
         font-weight: 600;
     }
-
-    /* Custom container for button alignment */
-    .button-container {
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        height: 100%;
-        padding-bottom: 1px;  /* Fine-tune this value if needed */
-    }
     </style>
     """, unsafe_allow_html=True)
     
@@ -339,29 +339,29 @@ def show_cii_calculator():
     world_ports_data = load_world_ports()
 
     # User inputs for vessel and year
-    col1, col2, col3, col4, col5, col6 = st.columns(6)
+    col1, col2, col3 = st.columns([2, 2, 2])
     
     with col1:
-        st.markdown("Enter Vessel Name")  # Label
-        vessel_name = st.text_input("", label_visibility="collapsed")
+        st.markdown('<p class="input-label">Enter Vessel Name</p>', unsafe_allow_html=True)
+        vessel_name = st.text_input("", label_visibility="collapsed", key="vessel_name_input")
         
     with col2:
-        st.markdown("Year for CII Calculation")  # Label
+        st.markdown('<p class="input-label">Year for CII Calculation</p>', unsafe_allow_html=True)
         year = st.number_input('', 
                               min_value=2023, 
                               max_value=date.today().year, 
                               value=date.today().year,
-                              label_visibility="collapsed")
+                              label_visibility="collapsed",
+                              key="year_input")
 
     with col3:
-        st.markdown("<div class='button-container'>", unsafe_allow_html=True)
         calculate_clicked = st.button(
             'Calculate Current CII', 
             use_container_width=True, 
             key='calculate_current_cii_button', 
             help='Calculate the current CII metrics based on the vessel and year input.'
         )
-        st.markdown("</div>", unsafe_allow_html=True)
+
 
 
     # Calculate current CII
