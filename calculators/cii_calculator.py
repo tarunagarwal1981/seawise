@@ -316,7 +316,7 @@ def show_cii_calculator():
     col1, col2, col3, col4, col5, col6 = st.columns(6)
     with col1:
         vessel_name = st.text_input("Enter Vessel Name")
-        calculate_clicked = st.button('Calculate Current CII')
+        
     with col2:
         year = st.number_input('Year for CII Calculation', 
                               min_value=2023, 
@@ -324,7 +324,7 @@ def show_cii_calculator():
                               value=date.today().year)
 
     with col:
-        vessel_name = st.text_input("Enter Vessel Name")
+        calculate_clicked = st.button('Calculate Current CII')
         
 
     # Calculate current CII
