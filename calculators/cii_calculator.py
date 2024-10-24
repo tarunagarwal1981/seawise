@@ -296,6 +296,11 @@ def show_cii_calculator():
         font-family: 'Nunito', sans-serif !important;
         color: #F4F4F4 !important;
     }
+
+     /* Custom placeholder above button */
+    .placeholder-text {
+        color: #132337 !important;
+    }
     </style>
     """, unsafe_allow_html=True)
     
@@ -324,7 +329,7 @@ def show_cii_calculator():
                               value=date.today().year)
 
     with col6:
-        st.markdown("<div style='color: #132337;'>xxxx</div>", unsafe_allow_html=True)
+        st.markdown("<div class='placeholder-text'>xxxx</div>", unsafe_allow_html=True)
         calculate_clicked = st.button('Calculate Current CII')
         
 
