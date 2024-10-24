@@ -291,7 +291,7 @@ def show_cii_calculator():
         display: flex !important;
         flex-direction: column !important;
         justify-content: flex-end !important;
-        padding-top: 28px !important;  /* Offset for missing label */
+        padding-top: 32px !important;  /* Offset for missing label */
     }
     
     /* Hide default Streamlit label space */
