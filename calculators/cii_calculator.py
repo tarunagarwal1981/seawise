@@ -422,6 +422,7 @@ def show_cii_calculator():
     # Calculate projected CII button
     # New code with styled button
     col1, col2 = st.columns([7, 1])
+    with col1: st.markdown("### Voyage Planning")
     with col2:
         calculate_projected = st.button(
             'Calculate Projected CII', 
