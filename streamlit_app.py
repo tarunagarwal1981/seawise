@@ -17,7 +17,7 @@ st.markdown("""
     .main > div {
         padding-left: 2rem;
         padding-right: 2rem;
-        max-width: 1800px;
+        max-width: 100%;
         background-color: #132337;
         font-family: 'Nunito', sans-serif !important;
         font-size: 14px;
@@ -52,7 +52,7 @@ st.markdown("""
     
     /* Main container styles */
     .block-container {
-        max-width: 95% !important;
+        max-width: 80% !important;
         padding-left: 2rem !important;
         padding-right: 2rem !important;
         background-color: #132337;
