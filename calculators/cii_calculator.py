@@ -347,7 +347,7 @@ def show_cii_calculator():
 
     with col3:
         st.markdown("<div class='placeholder-text'>xxxx</div>", unsafe_allow_html=True)
-        calculate_clicked = <div style='display: flex; align-items: flex-end;'>st.button('Calculate Current CII')</div>
+        calculate_clicked = <div style='display: flex; align-items: flex-end;'>st.button('Calculate Current CII', use_container_width=True)</div>
         
 
     # Calculate current CII
