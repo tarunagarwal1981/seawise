@@ -323,7 +323,7 @@ def show_cii_calculator():
                               max_value=date.today().year, 
                               value=date.today().year)
 
-    with col:
+    with col6:
         calculate_clicked = st.button('Calculate Current CII')
         
 
