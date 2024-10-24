@@ -302,12 +302,21 @@ def show_cii_calculator():
         color: #132337 !important;
     }
 
-    /* Add vertical and horizontal boundaries to columns */
-    .stMetric {
-        border-left: 1px solid #F4F4F4;
-        border-bottom: 1px solid #F4F4F4;
-        padding-left: 1rem;
-        padding-bottom: 1rem;
+    /* Table styles */
+    .metrics-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+    .metrics-table th, .metrics-table td {
+        border: 1px solid #F4F4F4;
+        padding: 0.5rem;
+        text-align: center;
+    }
+    .metrics-table th {
+        background-color: #132337;
+        color: #F4F4F4;
+        font-weight: 600;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -376,21 +385,36 @@ def show_cii_calculator():
             st.error(f"No data found for vessel {vessel_name} in year {year}")
 
     # Display current CII results if available
-     # Display current CII results if available
     if st.session_state.get('cii_data'):
         st.markdown("### Current CII Metrics")
-        col1, col2, col3, col4, col5 = st.columns(5)
-        with col1:
-            st.metric('Attained AER', f"{st.session_state.cii_data['attained_aer']:.4f}")
-        with col2:
-            st.metric('Required CII', f"{st.session_state.cii_data['required_cii']:.4f}")
-        with col3:
-            st.metric('CII Rating', st.session_state.cii_data['cii_rating'])
-        with col4:
-            st.metric('Total Distance (NM)', f"{st.session_state.cii_data['total_distance']:,.0f}")
-        with col5:
-            st.metric('CO2 Emission (MT)', f"{st.session_state.cii_data['co2_emission']:,.1f}")
-
+        st.markdown("""
+        <table class="metrics-table">
+            <thead>
+                <tr>
+                    <th>Attained AER</th>
+                    <th>Required CII</th>
+                    <th>CII Rating</th>
+                    <th>Total Distance (NM)</th>
+                    <th>CO2 Emission (MT)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{:.4f}</td>
+                    <td>{:.4f}</td>
+                    <td>{}</td>
+                    <td>{:,.0f}</td>
+                    <td>{:,.1f}</td>
+                </tr>
+            </tbody>
+        </table>
+        """.format(
+            st.session_state.cii_data['attained_aer'],
+            st.session_state.cii_data['required_cii'],
+            st.session_state.cii_data['cii_rating'],
+            st.session_state.cii_data['total_distance'],
+            st.session_state.cii_data['co2_emission']
+        ), unsafe_allow_html=True)
 
     # Voyage Planning Section
     st.markdown("### Voyage Planning")
