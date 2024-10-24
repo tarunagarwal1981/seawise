@@ -346,8 +346,8 @@ def show_cii_calculator():
                               value=date.today().year)
 
     with col3:
-        st.markdown("<div class='placeholder-text'>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</div>", unsafe_allow_html=True)
-        calculate_clicked = st.button('Calculate Current CII')
+        st.markdown("<div class='placeholder-text'>xxxx</div>", unsafe_allow_html=True)
+        calculate_clicked = <div style='display: flex; align-items: flex-end;'>st.button('Calculate Current CII')</div>
         
 
     # Calculate current CII
