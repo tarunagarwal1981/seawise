@@ -386,8 +386,8 @@ def show_cii_calculator():
                 cii_rating = calculate_cii_rating(attained_aer, required_cii)
                 
                 st.session_state.cii_data = {
-                    'attained_aer': attained_aer,
-                    'required_cii': required_cii,
+                    'attained_aer': round(attained_aer, 2),
+                    'required_cii': round(required_cii, 2),
                     'cii_rating': cii_rating,
                     'total_distance': df['total_distance'].iloc[0],
                     'co2_emission': df['CO2Emission'].iloc[0],
@@ -419,8 +419,8 @@ def show_cii_calculator():
             </thead>
             <tbody>
                 <tr>
-                    <td>{:.4f}</td>
-                    <td>{:.4f}</td>
+                    <td>{:.2f}</td>
+                    <td>{:.2f}</td>
                     <td>{}</td>
                     <td>{:,.0f}</td>
                     <td>{:,.1f}</td>
@@ -540,7 +540,7 @@ def show_cii_calculator():
                         </thead>
                         <tbody>
                             <tr>
-                                <td>{:.4f}</td>
+                                <td>{:.2f}</td>
                                 <td>{}</td>
                                 <td>{:,.1f}</td>
                                 <td>{:,.0f}</td>
@@ -549,7 +549,7 @@ def show_cii_calculator():
                         </tbody>
                     </table>
                     """.format(
-                        projections['projected_aer'],
+                        round(projections['projected_aer'], 2),
                         calculate_cii_rating(projections['projected_aer'], st.session_state.cii_data['required_cii']),
                         projections['new_co2'],
                         projections['total_distance'],
