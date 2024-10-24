@@ -536,35 +536,34 @@ def show_cii_calculator():
                 projections = calculate_projected_cii(st.session_state.cii_data, voyage_calculations)
                 
                 if projections:
-                    st.markdown("#### Voyage Segment Calculations")
-                    segment_df = pd.DataFrame(voyage_calculations)
-                    st.dataframe(segment_df)
-                    
-                    st.markdown("#### Projected CII Metrics")
-                    col1, col2, col3 = st.columns(3)
-                    with col1:
-                        st.metric("Projected AER", 
-                                f"{projections['projected_aer']:.4f}", 
-                                f"{projections['projected_aer'] - st.session_state.cii_data['attained_aer']:.4f}")
-                    with col2:
-                        projected_rating = calculate_cii_rating(
-                            projections['projected_aer'], 
-                            st.session_state.cii_data['required_cii']
-                        )
-                        st.metric("Projected CII Rating", projected_rating)
-                    with col3:
-                        st.metric("Additional CO2 (MT)", 
-                                f"{projections['new_co2']:,.1f}")
-                    
-                    st.markdown("#### Total Impact")
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.metric("Total Distance (NM)", 
-                                f"{projections['total_distance']:,.0f}", 
-                                f"+{projections['new_distance']:,.0f}")
-                    with col2:
-                        st.metric("Total CO2 (MT)", 
-                                f"{projections['total_co2']:,.1f}", 
-                                f"+{projections['new_co2']:,.1f}")
+                    st.markdown("### Projected CII Metrics")
+                    st.markdown("""
+                    <table class="metrics-table">
+                        <thead>
+                            <tr>
+                                <th>Projected AER</th>
+                                <th>Projected CII Rating</th>
+                                <th>Additional CO2 (MT)</th>
+                                <th>Total Distance (NM)</th>
+                                <th>Total CO2 (MT)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{:.4f}</td>
+                                <td>{}</td>
+                                <td>{:,.1f}</td>
+                                <td>{:,.0f}</td>
+                                <td>{:,.1f}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    """.format(
+                        projections['projected_aer'],
+                        calculate_cii_rating(projections['projected_aer'], st.session_state.cii_data['required_cii']),
+                        projections['new_co2'],
+                        projections['total_distance'],
+                        projections['total_co2']
+                    ), unsafe_allow_html=True)
         else:
             st.warning("Please add at least one voyage segment to calculate projections.")
