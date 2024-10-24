@@ -275,16 +275,7 @@ def show_cii_calculator():
         font-family: 'Nunito', sans-serif !important;
         font-size: 14px !important;
         font-weight: 600 !important;
-        margin-top: 24px !important;  /* Added to match the spacing in the image */
-    }
-    
-    .metric-card {
-        background-color: rgba(255, 255, 255, 0.1);
-        padding: 1rem;
-        border-radius: 0.5rem;
-        font-family: 'Nunito', sans-serif !important;
-        font-size: 12px !important;
-        color: #F4F4F4 !important;
+        height: 42px !important;  /* Match input height */
     }
     
     /* Input label styling */
@@ -294,33 +285,18 @@ def show_cii_calculator():
         margin-bottom: 8px !important;
         font-family: 'Nunito', sans-serif !important;
     }
-    
-    /* Calculator specific text */
-    .st-emotion-cache-10trblm {
-        font-family: 'Nunito', sans-serif !important;
-        color: #F4F4F4 !important;
-    }
-    
-    .st-emotion-cache-16idsys {
-        font-family: 'Nunito', sans-serif !important;
-        color: #F4F4F4 !important;
-    }
 
-    /* Table styles */
-    .metrics-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 1rem;
+    /* Container for bottom alignment */
+    .button-column {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-end !important;
+        padding-top: 22px !important;  /* Offset for missing label */
     }
-    .metrics-table th, .metrics-table td {
-        border: 1px solid #F4F4F4;
-        padding: 0.5rem;
-        text-align: center;
-    }
-    .metrics-table th {
-        background-color: #6E6E6E;
-        color: #F4F4F4;
-        font-weight: 600;
+    
+    /* Hide default Streamlit label space */
+    .st-emotion-cache-16idsys p {
+        margin-bottom: 0px !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -355,12 +331,14 @@ def show_cii_calculator():
                               key="year_input")
 
     with col3:
+        st.markdown('<div class="button-column">', unsafe_allow_html=True)
         calculate_clicked = st.button(
             'Calculate Current CII', 
             use_container_width=True, 
             key='calculate_current_cii_button', 
             help='Calculate the current CII metrics based on the vessel and year input.'
         )
+        st.markdown('</div>', unsafe_allow_html=True)
 
 
 
