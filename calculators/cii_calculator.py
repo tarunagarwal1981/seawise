@@ -368,7 +368,7 @@ def show_cii_calculator():
         )
         st.markdown('</div>', unsafe_allow_html=True)
 
-    with col4:
+    with col6:
         st.markdown('<div class="button-column">', unsafe_allow_html=True)
         draft_voyage_clicked = st.button(
             'Draft Voyage', 
