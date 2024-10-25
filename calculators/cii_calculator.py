@@ -330,7 +330,7 @@ def show_cii_calculator():
     /* Hide default Streamlit label space */
     .st-emotion-cache-16idsys p {
         margin-bottom: 0px !important;
-        
+    }
     </style>
     """, unsafe_allow_html=True)
     
@@ -483,20 +483,17 @@ def show_cii_calculator():
         ), unsafe_allow_html=True)
 
     # Voyage Planning Section
-    #st.markdown("### Voyage Planning")
-
-    # Calculate projected CII button
-    # New code with styled button
     col1, col2 = st.columns([7, 1])
 
-    with col1: st.markdown("### Voyage Planning")  
+    with col1: 
+        st.markdown("### Voyage Planning")  
     with col2:
         calculate_projected = st.button(
             'Calculate Projected CII', 
             disabled=not bool(st.session_state.cii_data),
             help="Current CII calculation required before projecting future CII",
             use_container_width=True,
-            key="calculate_projected_cii_button"  # Unique key
+            key="calculate_projected_cii_button"
         )
 
     if draft_voyage_clicked and st.session_state.get('calculate_projected'):
@@ -552,7 +549,14 @@ def show_cii_calculator():
                     min_value=0,
                     step=0.1,
                     required=True
-                ), font_color='#0F1824', required=True
+                ),
+                "Fuel Type": st.column_config.SelectboxColumn(
+                    "Fuel Type",
+                    help="Select fuel type",
+                    options=["VLSFO", "LSMGO", "LNG"],
+                    required=True
+                )
+            }
         )
         
         st.session_state.port_table_data = edited_df.values.tolist()
@@ -614,7 +618,6 @@ def show_cii_calculator():
             m = folium.Map(location=[0, 0], zoom_start=2)
         
         st_folium(m, width=None, height=400)
-
 
     st.markdown("""
         <style>
