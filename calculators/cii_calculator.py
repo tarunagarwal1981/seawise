@@ -367,7 +367,51 @@ def show_cii_calculator():
             help='Calculate the current CII metrics based on the vessel and year input.'
         )
         st.markdown('</div>', unsafe_allow_html=True)
+
+    with col4:
+        st.markdown('<div class="button-column">', unsafe_allow_html=True)
+        draft_voyage_clicked = st.button(
+            'Draft Voyage', 
+            use_container_width=True, 
+            key='draft_voyage_button', 
+            help='Auto-fill sample data for Draft Voyage calculation.'
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
         
+    # Draft Voyage Logic
+    if draft_voyage_clicked:
+        vessel_name = "CITY ISLAND"
+        year = date.today().year
+        engine = get_db_engine()
+        df = get_vessel_data(engine, vessel_name, year)
+
+        if not df.empty:
+            vessel_type = df['vessel_type'].iloc[0]
+            imo_ship_type = VESSEL_TYPE_MAPPING.get(vessel_type)
+            capacity = df['capacity'].iloc[0]
+            attained_aer = df['Attained_AER'].iloc[0]
+
+            if imo_ship_type and attained_aer is not None:
+                reference_cii = calculate_reference_cii(capacity, imo_ship_type)
+                required_cii = calculate_required_cii(reference_cii, year)
+                cii_rating = calculate_cii_rating(attained_aer, required_cii)
+                
+                st.session_state.cii_data = {
+                    'attained_aer': round(attained_aer, 2),
+                    'required_cii': round(required_cii, 2),
+                    'cii_rating': cii_rating,
+                    'total_distance': df['total_distance'].iloc[0],
+                    'co2_emission': df['CO2Emission'].iloc[0],
+                    'capacity': capacity,
+                    'vessel_type': vessel_type,
+                    'imo_ship_type': imo_ship_type
+                }
+
+                # Pre-fill Route Information
+                st.session_state.port_table_data = [
+                    ["ras laffan", "milford haven", 2.0, 20.0, 50.0, "LNG"],
+                    ["milford haven", "rotterdam", 3.0, 15.0, 40.0, "LNG"]
+                ]
 
     # Calculate current CII
     if calculate_clicked and vessel_name:
