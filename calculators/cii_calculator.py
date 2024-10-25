@@ -318,7 +318,7 @@ def show_cii_calculator():
 
     /* Table cell dropdown */
     [data-testid="stDataFrameCell"] select {
-        color: #00AAFF !important;
+        color: #132337 !important;
     }
 
     [data-testid="stDataFrameCell"] option {
