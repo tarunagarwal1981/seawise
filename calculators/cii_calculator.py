@@ -413,6 +413,9 @@ def show_cii_calculator():
                     ["milford haven", "rotterdam", 3.0, 15.0, 40.0, "LNG"]
                 ]
 
+                # Automatically trigger the calculation of Projected CII
+                st.session_state.calculate_projected = True
+
     # Calculate current CII
     if calculate_clicked and vessel_name:
         engine = get_db_engine()
@@ -495,6 +498,9 @@ def show_cii_calculator():
             use_container_width=True,
             key="calculate_projected_cii_button"  # Unique key
         )
+
+    if draft_voyage_clicked and st.session_state.get('calculate_projected'):
+        calculate_projected = True
 
     # Split layout for table and map
     left_col, right_col = st.columns([6, 6])
