@@ -362,7 +362,7 @@ def show_cii_calculator():
 
     /* Additional dropdown styling for data editor */
     .stDataFrame select {
-        color: #00AAFF !important;
+        color: #132337 !important;
     }
 
     .stDataFrame option {
