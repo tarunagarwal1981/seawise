@@ -368,7 +368,7 @@ def show_cii_calculator():
         )
         st.markdown('</div>', unsafe_allow_html=True)
 
-    with col6:
+    with col4:
         st.markdown('<div class="button-column">', unsafe_allow_html=True)
         draft_voyage_clicked = st.button(
             'Draft Voyage', 
@@ -547,16 +547,13 @@ def show_cii_calculator():
                     required=True
                 ),
                 "Fuel Used (mT)": st.column_config.NumberColumn(
-                    "Fuel Used (mT/d)",
+                    "Fuel Consumption (mT/d)",
                     help="Enter total fuel consumption",
                     min_value=0,
                     step=0.1,
                     required=True
                 ),
-                "Fuel Type": st.column_config.SelectboxColumn(
-                    "Fuel Type",
-                    help="Select fuel type",
-                    options=list(EMISSION_FACTORS.keys()),
+                 font_color='#0F1824',
                     required=True
                 )
             }
