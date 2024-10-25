@@ -297,32 +297,44 @@ def show_cii_calculator():
         color: #F4F4F4 !important;
     }
 
-    /* Specific styling for Fuel Type dropdown */
-    [data-testid="stDataFrameCell"] select {
+    /* Enhanced dropdown styling for data editor */
+    .st-emotion-cache-1umgx7l select,
+    .st-emotion-cache-1umgx7l option,
+    .st-emotion-cache-1umgx7l,
+    div[data-baseweb="select"] * {
         color: #132337 !important;
-        font-family: 'Nunito', sans-serif !important;
+        opacity: 1 !important;
     }
 
-    [data-testid="stDataFrameCell"] option {
+    /* Specific styling for cells and dropdowns */
+    .st-emotion-cache-1n76uvr {
         color: #132337 !important;
-        background-color: white !important;
-        font-family: 'Nunito', sans-serif !important;
+        opacity: 1 !important;
     }
 
-    /* Dropdown when expanded */
-    select:focus option {
+    /* Ensure dropdowns and their options are dark */
+    [data-testid="stDataFrameCell"] select,
+    [data-testid="stDataFrameCell"] option,
+    .stDataFrame select,
+    .stDataFrame option,
+    div[role="listbox"] * {
         color: #132337 !important;
-        background-color: white !important;
+        opacity: 1 !important;
+        font-weight: 500 !important;
     }
 
-    /* Data editor specific dropdown styling */
-    .stDataFrame select {
+    /* Styling for None/placeholder text */
+    .st-emotion-cache-1umgx7l select option[value="None"],
+    [data-testid="stDataFrameCell"] select option[value="None"] {
         color: #132337 !important;
+        opacity: 1 !important;
     }
 
-    .stDataFrame option {
+    /* Custom styling for select boxes */
+    select.st-emotion-cache-1umgx7l,
+    select.st-emotion-cache-1n76uvr {
         color: #132337 !important;
-        background-color: white !important;
+        opacity: 1 !important;
     }
 
      /* Custom placeholder above button */
@@ -360,21 +372,18 @@ def show_cii_calculator():
         margin-bottom: 0px !important;
     }
 
-    /* Additional styling for data editor cells */
-    .st-emotion-cache-1n76uvr {
+    /* Force dark text in data editor cells */
+    .stDataFrame div[role="cell"],
+    .stDataFrame div[role="cell"] * {
         color: #132337 !important;
+        opacity: 1 !important;
     }
 
-    /* Styling for selected option */
-    .st-emotion-cache-1umgx7l select {
+    /* Additional selector for dropdown text */
+    div[data-baseweb="select"] div[title],
+    div[data-baseweb="select"] span {
         color: #132337 !important;
-    }
-
-    /* Ensure consistent styling in all states */
-    .st-emotion-cache-1umgx7l select:focus,
-    .st-emotion-cache-1umgx7l select:active,
-    .st-emotion-cache-1umgx7l select:hover {
-        color: #132337 !important;
+        opacity: 1 !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -558,51 +567,52 @@ def show_cii_calculator():
         )
         
         edited_df = st.data_editor(
-            port_data_df,
-            num_rows="dynamic",
-            key="port_table_editor",
-            column_config={
-                "From Port": st.column_config.TextColumn(
-                    "From Port",
-                    help="Enter departure port name",
-                    required=True
-                ),
-                "To Port": st.column_config.TextColumn(
-                    "To Port",
-                    help="Enter arrival port name",
-                    required=True
-                ),
-                "Port Days": st.column_config.NumberColumn(
-                    "Port Days",
-                    help="Enter number of days in port",
-                    min_value=0,
-                    max_value=100,
-                    step=0.5,
-                    required=True
-                ),
-                "Speed (knots)": st.column_config.NumberColumn(
-                    "Speed (knots)",
-                    help="Enter vessel speed in knots",
-                    min_value=1,
-                    max_value=30,
-                    step=0.1,
-                    required=True
-                ),
-                "Fuel Used (mT)": st.column_config.NumberColumn(
-                    "Fuel Consumption (mT/d)",
-                    help="Enter total fuel consumption",
-                    min_value=0,
-                    step=0.1,
-                    required=True
-                ),
-                "Fuel Type": st.column_config.SelectboxColumn(
-                    "Fuel Type",
-                    help="Select fuel type",
-                    options=["VLSFO", "LSMGO", "LNG"],
-                    required=True
-                )
-            }
-        )
+        port_data_df,
+        num_rows="dynamic",
+        key="port_table_editor",
+        column_config={
+            "From Port": st.column_config.TextColumn(
+                "From Port",
+                help="Enter departure port name",
+                required=True
+            ),
+            "To Port": st.column_config.TextColumn(
+                "To Port",
+                help="Enter arrival port name",
+                required=True
+            ),
+            "Port Days": st.column_config.NumberColumn(
+                "Port Days",
+                help="Enter number of days in port",
+                min_value=0,
+                max_value=100,
+                step=0.5,
+                required=True
+            ),
+            "Speed (knots)": st.column_config.NumberColumn(
+                "Speed (knots)",
+                help="Enter vessel speed in knots",
+                min_value=1,
+                max_value=30,
+                step=0.1,
+                required=True
+            ),
+            "Fuel Used (mT)": st.column_config.NumberColumn(
+                "Fuel Consumption (mT/d)",
+                help="Enter total fuel consumption",
+                min_value=0,
+                step=0.1,
+                required=True
+            ),
+            "Fuel Type": st.column_config.SelectboxColumn(
+                "Fuel Type",
+                help="Select fuel type",
+                options=["VLSFO", "LSMGO", "LNG"],
+                required=True,
+                width="medium"
+            )
+        }
+    )
         
         st.session_state.port_table_data = edited_df.values.tolist()
 
