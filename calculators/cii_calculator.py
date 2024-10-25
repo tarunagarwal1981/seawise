@@ -297,32 +297,32 @@ def show_cii_calculator():
         color: #F4F4F4 !important;
     }
 
-    /* Dropdown styles */
-    .stSelectbox option {
-        color: #00AAFF !important;
-    }
-
-    /* Data editor dropdown styles */
-    .st-emotion-cache-1umgx7l {
-        color: #00AAFF !important;
-    }
-
-    .st-emotion-cache-1umgx7l option {
-        color: #00AAFF !important;
-    }
-
-    /* Selected option color */
-    .st-emotion-cache-1umgx7l select:focus {
-        color: #00AAFF !important;
-    }
-
-    /* Table cell dropdown */
+    /* Specific styling for Fuel Type dropdown */
     [data-testid="stDataFrameCell"] select {
         color: #132337 !important;
+        font-family: 'Nunito', sans-serif !important;
     }
 
     [data-testid="stDataFrameCell"] option {
-        color: #00AAFF !important;
+        color: #132337 !important;
+        background-color: white !important;
+        font-family: 'Nunito', sans-serif !important;
+    }
+
+    /* Dropdown when expanded */
+    select:focus option {
+        color: #132337 !important;
+        background-color: white !important;
+    }
+
+    /* Data editor specific dropdown styling */
+    .stDataFrame select {
+        color: #132337 !important;
+    }
+
+    .stDataFrame option {
+        color: #132337 !important;
+        background-color: white !important;
     }
 
      /* Custom placeholder above button */
@@ -360,20 +360,21 @@ def show_cii_calculator():
         margin-bottom: 0px !important;
     }
 
-    /* Additional dropdown styling for data editor */
-    .stDataFrame select {
+    /* Additional styling for data editor cells */
+    .st-emotion-cache-1n76uvr {
         color: #132337 !important;
     }
 
-    .stDataFrame option {
-        color: #00AAFF !important;
-        background-color: white !important;
+    /* Styling for selected option */
+    .st-emotion-cache-1umgx7l select {
+        color: #132337 !important;
     }
 
-    /* Styling for dropdown when expanded */
-    select:focus option {
-        color: #00AAFF !important;
-        background-color: white !important;
+    /* Ensure consistent styling in all states */
+    .st-emotion-cache-1umgx7l select:focus,
+    .st-emotion-cache-1umgx7l select:active,
+    .st-emotion-cache-1umgx7l select:hover {
+        color: #132337 !important;
     }
     </style>
     """, unsafe_allow_html=True)
