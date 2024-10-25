@@ -552,8 +552,7 @@ def show_cii_calculator():
                     min_value=0,
                     step=0.1,
                     required=True
-                ),
-                 font_color='#0F1824', required=True)
+                ), font_color='#0F1824', required=True
         )
         
         st.session_state.port_table_data = edited_df.values.tolist()
