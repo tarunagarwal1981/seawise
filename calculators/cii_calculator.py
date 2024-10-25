@@ -297,6 +297,34 @@ def show_cii_calculator():
         color: #F4F4F4 !important;
     }
 
+    /* Dropdown styles */
+    .stSelectbox option {
+        color: #00AAFF !important;
+    }
+
+    /* Data editor dropdown styles */
+    .st-emotion-cache-1umgx7l {
+        color: #00AAFF !important;
+    }
+
+    .st-emotion-cache-1umgx7l option {
+        color: #00AAFF !important;
+    }
+
+    /* Selected option color */
+    .st-emotion-cache-1umgx7l select:focus {
+        color: #00AAFF !important;
+    }
+
+    /* Table cell dropdown */
+    [data-testid="stDataFrameCell"] select {
+        color: #00AAFF !important;
+    }
+
+    [data-testid="stDataFrameCell"] option {
+        color: #00AAFF !important;
+    }
+
      /* Custom placeholder above button */
     .placeholder-text {
         color: #132337 !important;
@@ -330,6 +358,22 @@ def show_cii_calculator():
     /* Hide default Streamlit label space */
     .st-emotion-cache-16idsys p {
         margin-bottom: 0px !important;
+    }
+
+    /* Additional dropdown styling for data editor */
+    .stDataFrame select {
+        color: #00AAFF !important;
+    }
+
+    .stDataFrame option {
+        color: #00AAFF !important;
+        background-color: white !important;
+    }
+
+    /* Styling for dropdown when expanded */
+    select:focus option {
+        color: #00AAFF !important;
+        background-color: white !important;
     }
     </style>
     """, unsafe_allow_html=True)
