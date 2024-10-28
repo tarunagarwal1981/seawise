@@ -463,8 +463,8 @@ def show_cii_calculator():
 
                 # Pre-fill Route Information
                 st.session_state.port_table_data = [
-                    ["ras laffan", "milford haven", 2.0, 20.0, 50.0, "LNG"],
-                    ["milford haven", "rotterdam", 3.0, 15.0, 40.0, "LNG"]
+                    ["Ras Laffan", "Milford Haven", 2.0, 20.0, 50.0, "LNG"],
+                    ["Milford haven", "Rotterdam", 3.0, 15.0, 40.0, "LNG"]
                 ]
 
                 # Automatically trigger the calculation of Projected CII
