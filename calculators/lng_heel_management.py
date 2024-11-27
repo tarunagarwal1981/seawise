@@ -1,4 +1,5 @@
 import streamlit as st
+from datetime import datetime
 
 # Function to calculate totals
 def calculate_totals(consumption_rate, distance, speed):
@@ -16,7 +17,8 @@ def show_lng_heel_calculator():
     st.subheader("Laden Leg Input")
     laden_voyage_from = st.text_input("Voyage From (Laden Leg)")
     laden_voyage_to = st.text_input("Voyage To (Laden Leg)")
-    laden_departure = st.datetime_input("Date and Time of Departure (Laden Leg)")
+    laden_departure_date = st.date_input("Departure Date (Laden Leg)")
+    laden_departure_time = st.time_input("Departure Time (Laden Leg)")
     laden_eta = st.text_input("ETA (Laden Leg)")
     laden_distance = st.number_input("Distance (NM, Laden Leg)", min_value=0.0, step=0.1)
     laden_speed = st.number_input("Speed Required (Knots, Laden Leg)", min_value=0.0, step=0.1)
@@ -24,6 +26,9 @@ def show_lng_heel_calculator():
     laden_lng_consumption = st.number_input("LNG Consumption (m³/D, Laden Leg)", min_value=0.0, step=0.1)
     laden_reliq = st.number_input("Reliquefaction Consumption (m³/D, Laden Leg)", min_value=0.0, step=0.1)
     laden_gcu = st.number_input("GCU Consumption (m³/D, Laden Leg)", min_value=0.0, step=0.1)
+
+    # Combine date and time into a single datetime object
+    laden_departure = datetime.combine(laden_departure_date, laden_departure_time)
 
     # Calculate Laden Leg totals
     laden_total_liquid_fuel = calculate_totals(laden_liquid_fuel, laden_distance, laden_speed)
@@ -35,7 +40,8 @@ def show_lng_heel_calculator():
     st.subheader("Ballast Leg Input")
     ballast_voyage_from = st.text_input("Voyage From (Ballast Leg)")
     ballast_voyage_to = st.text_input("Voyage To (Ballast Leg)")
-    ballast_departure = st.datetime_input("Date and Time of Departure (Ballast Leg)")
+    ballast_departure_date = st.date_input("Departure Date (Ballast Leg)")
+    ballast_departure_time = st.time_input("Departure Time (Ballast Leg)")
     ballast_eta = st.text_input("ETA (Ballast Leg)")
     ballast_distance = st.number_input("Distance (NM, Ballast Leg)", min_value=0.0, step=0.1)
     ballast_speed = st.number_input("Speed Required (Knots, Ballast Leg)", min_value=0.0, step=0.1)
@@ -43,6 +49,9 @@ def show_lng_heel_calculator():
     ballast_lng_consumption = st.number_input("LNG Consumption (m³/D, Ballast Leg)", min_value=0.0, step=0.1)
     ballast_reliq = st.number_input("Reliquefaction Consumption (m³/D, Ballast Leg)", min_value=0.0, step=0.1)
     ballast_gcu = st.number_input("GCU Consumption (m³/D, Ballast Leg)", min_value=0.0, step=0.1)
+
+    # Combine date and time into a single datetime object
+    ballast_departure = datetime.combine(ballast_departure_date, ballast_departure_time)
 
     # Calculate Ballast Leg totals
     ballast_total_liquid_fuel = calculate_totals(ballast_liquid_fuel, ballast_distance, ballast_speed)
