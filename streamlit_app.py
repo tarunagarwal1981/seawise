@@ -217,7 +217,7 @@ def main():
     if calculator_choice == "CII Calculator":
         show_cii_calculator()
     elif calculator_choice == "Heel Calculator":
-        st.title("Heel Calculator - Coming Soon")
+        show_lng_heel_calculator()
     elif calculator_choice == "BOG Calculator":
         st.title("BOG Calculator - Coming Soon")
 
