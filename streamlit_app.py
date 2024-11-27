@@ -5,6 +5,8 @@ st.set_page_config(page_title="Seawise Calculators", layout="wide", page_icon="ð
 
 # Import calculators
 from calculators.cii_calculator import show_cii_calculator
+from calculators.lng_heel_management import show_lng_heel_calculator
+
 
 
 # Add custom CSS to control sidebar width and main content
