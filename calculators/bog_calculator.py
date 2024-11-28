@@ -3,14 +3,24 @@
 import streamlit as st
 from datetime import datetime
 import pandas as pd
+import numpy as np
 
-def calculate_bog(cargo_volume, bog_rate, time):
-    """Calculate BOG generation"""
-    if cargo_volume > 0 and bog_rate > 0 and time > 0:
-        daily_bog = cargo_volume * (bog_rate / 100)
+# Weather effect calculation functions remain the same
+[Previous weather calculation functions: calculate_temperature_effect, calculate_sea_state_effect, calculate_solar_effect]
+
+def calculate_adjusted_bog(cargo_volume, base_bog_rate, time, ambient_temp, wave_height, solar_radiation):
+    """Calculate BOG with environmental adjustments"""
+    if cargo_volume > 0 and base_bog_rate > 0 and time > 0:
+        temp_adjusted_rate = calculate_temperature_effect(base_bog_rate, ambient_temp)
+        sea_state_adjustment = calculate_sea_state_effect(base_bog_rate, wave_height)
+        solar_adjustment = calculate_solar_effect(base_bog_rate, solar_radiation)
+        
+        total_rate = temp_adjusted_rate + sea_state_adjustment + solar_adjustment
+        daily_bog = cargo_volume * (total_rate / 100)
         total_bog = daily_bog * time
-        return round(total_bog, 2)
-    return 0
+        
+        return round(total_bog, 2), round(total_rate, 4)
+    return 0, 0
 
 def calculate_totals(consumption_rate, distance, speed):
     """Calculate consumption totals and journey time"""
@@ -25,7 +35,7 @@ def create_voyage_section(leg_type):
     """Create input section for voyage leg"""
     st.subheader(f"{leg_type} Leg Details")
     
-    # Row 1: Basic voyage details
+    # Row 1: Basic voyage details from enhanced calculator
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
         voyage_from = st.text_input(f"From", key=f"{leg_type}_from")
@@ -94,7 +104,7 @@ def create_voyage_section(leg_type):
         )
     with col4:
         bog_rate = st.number_input(
-            "Daily BOG Rate (%)",
+            "Base BOG Rate (%)",
             min_value=0.0,
             max_value=100.0,
             value=0.15,
@@ -103,12 +113,46 @@ def create_voyage_section(leg_type):
             help="Typical values: 0.10% - 0.15% for modern vessels"
         )
 
-    # Calculate totals
+    # Add weather section
+    st.subheader(f"{leg_type} Weather Conditions")
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        ambient_temp = st.number_input(
+            "Average Ambient Temperature (°C)",
+            min_value=-20.0,
+            max_value=45.0,
+            value=19.5,
+            step=0.5,
+            key=f"{leg_type}_temp"
+        )
+    
+    with col2:
+        wave_height = st.number_input(
+            "Significant Wave Height (m)",
+            min_value=0.0,
+            max_value=10.0,
+            value=1.0,
+            step=0.5,
+            key=f"{leg_type}_waves"
+        )
+    
+    with col3:
+        solar_radiation = st.selectbox(
+            "Solar Radiation Level",
+            options=['Low', 'Medium', 'High'],
+            key=f"{leg_type}_solar"
+        )
+
+    # Calculate all totals
     total_liquid_fuel, voyage_time = calculate_totals(liquid_fuel, distance, speed)
     total_lng, _ = calculate_totals(lng_consumption, distance, speed)
     total_reliq, _ = calculate_totals(reliq, distance, speed)
     total_gcu, _ = calculate_totals(gcu, distance, speed)
-    total_bog = calculate_bog(cargo_volume, bog_rate, voyage_time)
+    total_bog, adjusted_rate = calculate_adjusted_bog(
+        cargo_volume, bog_rate, voyage_time,
+        ambient_temp, wave_height, solar_radiation
+    )
     
     return {
         'voyage_from': voyage_from,
@@ -122,11 +166,16 @@ def create_voyage_section(leg_type):
         'total_reliq': total_reliq,
         'total_gcu': total_gcu,
         'total_bog': total_bog,
-        'cargo_volume': cargo_volume
+        'cargo_volume': cargo_volume,
+        'base_bog_rate': bog_rate,
+        'adjusted_bog_rate': adjusted_rate,
+        'ambient_temp': ambient_temp,
+        'wave_height': wave_height,
+        'solar_radiation': solar_radiation
     }
 
 def show_summary(laden_data, ballast_data):
-    """Display voyage summary"""
+    """Display comprehensive voyage summary"""
     st.header("Voyage Summary")
     
     summary_data = {
@@ -136,7 +185,9 @@ def show_summary(laden_data, ballast_data):
             'LNG (m³)', 
             'Reliquefaction (m³)', 
             'GCU (m³)',
-            'BOG Generation (m³)'
+            'BOG Generation (m³)',
+            'Base BOG Rate (%)',
+            'Weather-Adjusted BOG Rate (%)'
         ],
         'Laden': [
             laden_data['distance'],
@@ -144,7 +195,9 @@ def show_summary(laden_data, ballast_data):
             laden_data['total_lng'],
             laden_data['total_reliq'],
             laden_data['total_gcu'],
-            laden_data['total_bog']
+            laden_data['total_bog'],
+            laden_data['base_bog_rate'],
+            laden_data['adjusted_bog_rate']
         ],
         'Ballast': [
             ballast_data['distance'],
@@ -152,7 +205,9 @@ def show_summary(laden_data, ballast_data):
             ballast_data['total_lng'],
             ballast_data['total_reliq'],
             ballast_data['total_gcu'],
-            ballast_data['total_bog']
+            ballast_data['total_bog'],
+            ballast_data['base_bog_rate'],
+            ballast_data['adjusted_bog_rate']
         ]
     }
     
@@ -169,6 +224,7 @@ def show_summary(laden_data, ballast_data):
         {laden_data['voyage_from']} → {laden_data['voyage_to']}  
         Departure: {laden_data['departure'].strftime('%Y-%m-%d %H:%M')} | ETA: {laden_data['eta']}
         Cargo Volume: {laden_data['cargo_volume']:,.0f} m³
+        Weather: {laden_data['ambient_temp']}°C, {laden_data['wave_height']}m waves, {laden_data['solar_radiation']} radiation
         """)
     with col2:
         st.markdown(f"""
@@ -176,23 +232,23 @@ def show_summary(laden_data, ballast_data):
         {ballast_data['voyage_from']} → {ballast_data['voyage_to']}  
         Departure: {ballast_data['departure'].strftime('%Y-%m-%d %H:%M')} | ETA: {ballast_data['eta']}
         Cargo Volume: {ballast_data['cargo_volume']:,.0f} m³
+        Weather: {ballast_data['ambient_temp']}°C, {ballast_data['wave_height']}m waves, {ballast_data['solar_radiation']} radiation
         """)
 
 def show_bog_calculator():
-    st.title("BOG Calculator")
+    st.title("Advanced BOG Calculator with Weather Effects")
     
     st.markdown("""
-    ### BOG Estimation
-    The calculator includes Boil-Off Gas (BOG) estimation based on:
-    - Cargo volume
-    - Daily BOG rate (default 0.15% which is typical for modern LNG carriers)
-    - Journey duration (calculated from distance and speed)
-    - Separate calculations for laden and ballast legs
+    ### Comprehensive BOG Calculation System
+    This calculator includes:
+    1. Complete voyage planning (laden and ballast legs)
+    2. Consumption tracking (fuel, LNG, reliquefaction, GCU)
+    3. Environmental impact on BOG generation:
+       - Ambient temperature (baseline: 19.5°C)
+       - Sea state (wave height)
+       - Solar radiation levels
     
-    Additional features:
-    - GCU and reliquefaction tracking
-    - Fuel consumption monitoring
-    - Complete voyage planning
+    The base BOG rate is automatically adjusted based on environmental conditions.
     """)
     
     st.markdown("---")
@@ -203,5 +259,9 @@ def show_bog_calculator():
     show_summary(laden_data, ballast_data)
 
 if __name__ == "__main__":
-    st.set_page_config(page_title="BOG Calculator", layout="wide")
+    st.set_page_config(
+        page_title="Advanced BOG Calculator",
+        page_icon="🚢",
+        layout="wide"
+    )
     show_bog_calculator()
