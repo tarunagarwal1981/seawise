@@ -78,8 +78,8 @@ def create_voyage_input(leg_type):
 def show_summary(laden_data, ballast_data):
     st.header("Voyage Summary")
     
-    # Create summary table
-    summary_data = {
+    # Create numerical summary table
+    numerical_data = {
         'Metric': ['Total Distance (NM)', 'Liquid Fuel (MT)', 'LNG (m³)', 'Reliquefaction (m³)', 'GCU (m³)'],
         'Laden': [
             laden_data['distance'],
@@ -97,10 +97,11 @@ def show_summary(laden_data, ballast_data):
         ]
     }
     
-    df = pd.DataFrame(summary_data)
+    df = pd.DataFrame(numerical_data)
     df['Total'] = df['Laden'] + df['Ballast']
     
-    st.dataframe(df.style.format("{:.2f}"), use_container_width=True)
+    # Display the dataframe without styling
+    st.dataframe(df, use_container_width=True)
     
     # Display route information
     st.subheader("Route Information")
