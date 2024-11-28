@@ -5,8 +5,42 @@ from datetime import datetime
 import pandas as pd
 import numpy as np
 
-# Weather effect calculation functions remain the same
-[Previous weather calculation functions: calculate_temperature_effect, calculate_sea_state_effect, calculate_solar_effect]
+# Weather effect calculation 
+def calculate_temperature_effect(base_bog_rate, ambient_temp, reference_temp=19.5):
+    """
+    Calculate BOG rate adjustment for ambient temperature
+    Reference temperature is typically 19.5°C (average sea temperature)
+    """
+    temp_difference = ambient_temp - reference_temp
+    # Approximately 0.025% increase per 10°C
+    adjustment = (temp_difference / 10) * 0.025
+    return base_bog_rate + adjustment
+
+def calculate_sea_state_effect(base_bog_rate, wave_height):
+    """
+    Calculate BOG rate adjustment for sea state
+    Wave height in meters
+    """
+    if wave_height < 1:
+        return 0
+    elif wave_height < 2:
+        return 0.005  # 0.005% increase for moderate seas
+    elif wave_height < 4:
+        return 0.01   # 0.01% increase for rough seas
+    else:
+        return 0.02   # 0.02% increase for very rough seas
+
+def calculate_solar_effect(base_bog_rate, solar_radiation):
+    """
+    Calculate BOG rate adjustment for solar radiation
+    solar_radiation: Low, Medium, High
+    """
+    solar_factors = {
+        'Low': 0.005,    # Cloudy/night
+        'Medium': 0.015, # Partly cloudy
+        'High': 0.025    # Full sun
+    }
+    return solar_factors.get(solar_radiation, 0)
 
 def calculate_adjusted_bog(cargo_volume, base_bog_rate, time, ambient_temp, wave_height, solar_radiation):
     """Calculate BOG with environmental adjustments"""
