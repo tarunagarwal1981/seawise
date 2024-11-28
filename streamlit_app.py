@@ -6,6 +6,7 @@ st.set_page_config(page_title="Seawise Calculators", layout="wide", page_icon="ð
 # Import calculators
 from calculators.cii_calculator import show_cii_calculator
 from calculators.lng_heel_management import show_lng_heel_calculator
+from calculators.bog_calculator import show_bog_calculator
 
 
 
@@ -221,7 +222,7 @@ def main():
     elif calculator_choice == "Heel Calculator":
         show_lng_heel_calculator()
     elif calculator_choice == "BOG Calculator":
-        st.title("BOG Calculator - Coming Soon")
+        show_bog_calculator()
 
 if __name__ == "__main__":
     main()
