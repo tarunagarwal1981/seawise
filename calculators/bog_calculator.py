@@ -108,8 +108,8 @@ def calculate_adjusted_bog(base_bog_rate, ambient_temp, wave_height, solar_radia
 def calculate_heel_qty(distance, speed, consumption_rate, adjusted_bog_rate, extra_days=3):
     """Calculate required heel quantity"""
     voyage_days = distance / (speed * 24)
-    total_bog = voyage_days * (adjusted_bog_rate / 100) * consumption_rate
-    extra_bog = extra_days * (adjusted_bog_rate / 100) * consumption_rate
+    total_bog = voyage_days * consumption_rate
+    extra_bog = extra_days * consumption_rate
     return round(total_bog + extra_bog, 2)
 
 # Enhanced Voyage Section
