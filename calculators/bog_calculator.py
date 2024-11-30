@@ -9,6 +9,100 @@ from fuzzywuzzy import process
 import plotly.graph_objects as go
 import plotly.express as px
 
+# Data Loading Functions
+@st.cache_data
+def load_world_ports():
+    """Load and cache world ports data"""
+    try:
+        return pd.read_csv("UpdatedPub150.csv")
+    except Exception as e:
+        st.warning("Using default port data as port database could not be loaded.")
+        # Provide comprehensive default data
+        return pd.DataFrame({
+            'Main Port Name': [
+                'SINGAPORE', 'ROTTERDAM', 'FUJAIRAH', 'YOKOHAMA', 'BUSAN',
+                'QATARGAS', 'SABINE PASS', 'ZEEBRUGGE', 'DALIAN', 'BARCELONA'
+            ],
+            'Latitude': [
+                1.290270, 51.916667, 25.112225, 35.443708, 35.179554,
+                25.900000, 29.732000, 51.333333, 38.921700, 41.345800
+            ],
+            'Longitude': [
+                103.855836, 4.500000, 56.336096, 139.638026, 129.075642,
+                51.516700, -93.860000, 3.200000, 121.638600, 2.183300
+            ]
+        })
+
+@st.cache_data
+def get_port_distances():
+    """Load cached port distances"""
+    try:
+        return pd.read_csv("port_distances.csv")
+    except Exception as e:
+        st.warning("Port distance database not available. Using calculated distances.")
+        return None
+
+def world_port_index(port_to_match, world_ports_data):
+    """Find best matching port from world ports data"""
+    if not port_to_match:
+        return None
+    try:
+        best_match = process.extractOne(port_to_match, world_ports_data['Main Port Name'])
+        return world_ports_data[world_ports_data['Main Port Name'] == best_match[0]].iloc[0]
+    except Exception as e:
+        st.error(f"Error matching port: {str(e)}")
+        return None
+
+def route_distance(origin, destination, world_ports_data):
+    """Calculate route distance between two ports"""
+    try:
+        # Check port distance database first
+        port_distances = get_port_distances()
+        if port_distances is not None:
+            distance = port_distances.get((origin, destination))
+            if distance is not None:
+                return float(distance)
+
+        # Calculate using searoute if not found in database
+        origin_port = world_port_index(origin, world_ports_data)
+        destination_port = world_port_index(destination, world_ports_data)
+        
+        if origin_port is None or destination_port is None:
+            return 0.0
+
+        origin_coords = [float(origin_port['Longitude']), float(origin_port['Latitude'])]
+        destination_coords = [float(destination_port['Longitude']), float(destination_port['Latitude'])]
+        
+        try:
+            sea_route = sr.searoute(origin_coords, destination_coords, units="naut")
+            return float(sea_route['properties']['length'])
+        except Exception as e:
+            st.warning(f"Error calculating route: {str(e)}. Using great circle distance.")
+            # Fallback to great circle distance
+            return calculate_gc_distance(
+                origin_port['Latitude'], origin_port['Longitude'],
+                destination_port['Latitude'], destination_port['Longitude']
+            )
+    except Exception as e:
+        st.error(f"Error calculating distance: {str(e)}")
+        return 0.0
+
+def calculate_gc_distance(lat1, lon1, lat2, lon2):
+    """Calculate great circle distance between two points"""
+    from math import radians, sin, cos, sqrt, atan2
+    
+    R = 3440.065  # Earth radius in nautical miles
+    
+    lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
+    
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1-a))
+    
+    return R * c
+
 def calculate_heel_requirements(
     tank_capacity: float,
     voyage_days: float,
