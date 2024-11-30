@@ -935,7 +935,7 @@ def create_voyage_section_enhanced(
         'economics': None,
         'heel_requirements': None
     }
-
+    key_prefix = "laden_" if not is_ballast else "ballast_"
     st.subheader(f"{leg_type} Leg Details")
     
     tabs = st.tabs([
