@@ -759,10 +759,11 @@ def plot_vessel_efficiency_chart(
     daily_data: pd.DataFrame
 ) -> go.Figure:
     """
-    Create efficiency analysis chart with a single figure
+    Create efficiency analysis chart using subplots
     """
+    # Create figure with secondary y-axis
     fig = go.Figure()
-    
+
     # Add power distribution as pie chart
     fig.add_trace(go.Pie(
         labels=["Base", "Reliquefaction", "Engine", "Auxiliary"],
@@ -773,42 +774,48 @@ def plot_vessel_efficiency_chart(
             power_data['auxiliary_power']
         ],
         name="Power Distribution",
-        domain={'x': [0, 0.5], 'y': [0, 1]},
-        hole=.3
+        showlegend=True
     ))
-    
-    # Add efficiency trends as line chart
-    fig.add_trace(go.Scatter(
-        x=daily_data['day'],
-        y=daily_data['tank_level'],
-        name="Tank Level",
-        line=dict(color='blue'),
-        domain={'x': [0.6, 1], 'y': [0, 1]}
-    ))
-    
+
     # Update layout
     fig.update_layout(
         title=f"{vessel_type} Vessel Efficiency Analysis",
         height=500,
-        showlegend=True,
+        grid=dict(rows=1, columns=2),
         annotations=[
             dict(
-                x=0.25,
-                y=1.1,
                 text="Power Distribution",
                 showarrow=False,
-                font=dict(size=14)
-            ),
-            dict(
-                x=0.80,
-                y=1.1,
-                text="Tank Level Trend",
-                showarrow=False,
-                font=dict(size=14)
+                x=0.25,
+                y=1.1
             )
         ]
     )
-    
+
+    # Optional: Add tank level trace to the right side
+    if 'tank_level' in daily_data.columns:
+        fig.add_trace(
+            go.Scatter(
+                x=daily_data['day'],
+                y=daily_data['tank_level'],
+                name="Tank Level (%)",
+                yaxis="y2"
+            )
+        )
+        
+        # Update layout to accommodate second y-axis
+        fig.update_layout(
+            yaxis2=dict(
+                title="Tank Level (%)",
+                overlaying="y",
+                side="right"
+            ),
+            xaxis=dict(
+                domain=[0.6, 1.0]
+            ),
+            showlegend=True
+        )
+
     return fig
 
 def create_stacked_efficiency_chart(daily_data: pd.DataFrame) -> go.Figure:
