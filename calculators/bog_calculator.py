@@ -109,26 +109,36 @@ def calculate_power_requirements(
     vessel_configs = get_vessel_configs()
     config = vessel_configs[vessel_type]
     
-    # Base power requirements
-    base_power = config['power_output']['calm']
-    if wave_height > 3.0:
-        base_power = config['power_output']['adverse']
+    # Base power requirements - handle different vessel types
+    if vessel_type == "MEGI":
+        base_power = config['power_output']['calm']
+        if wave_height > 3.0:
+            base_power = config['power_output']['adverse']
+    else:  # DFDE
+        base_power = config['power_output']['nbog_laden']
+        if wave_height > 3.0:
+            base_power = config['power_output']['max']
     
-    # Reliquefaction power
-    reliq_power = min(config['reliq_power']['min'] + 
-                     (bog_generated / reliq_capacity) * 
-                     (config['reliq_power']['max'] - config['reliq_power']['min']),
-                     config['reliq_power']['max']) if vessel_type == "MEGI" else 0.0
+    # Reliquefaction power - only for MEGI vessels
+    if vessel_type == "MEGI" and 'reliq_power' in config:
+        reliq_power = min(
+            config['reliq_power']['min'] + 
+            (bog_generated / reliq_capacity) * 
+            (config['reliq_power']['max'] - config['reliq_power']['min']),
+            config['reliq_power']['max']
+        )
+    else:
+        reliq_power = 0.0
     
     # Engine power for BOG consumption
     engine_power = (bog_generated * config['engine_efficiency'] * 
                    (1.0 + (ambient_temp - 19.5) / 100.0))
     
     return {
-        'base_power': base_power,
-        'reliq_power': reliq_power,
-        'engine_power': engine_power,
-        'total_power': base_power + reliq_power + engine_power
+        'base_power': float(base_power),
+        'reliq_power': float(reliq_power),
+        'engine_power': float(engine_power),
+        'total_power': float(base_power + reliq_power + engine_power)
     }
 
 def calculate_economic_metrics(
