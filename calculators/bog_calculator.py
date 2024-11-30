@@ -9,6 +9,18 @@ from fuzzywuzzy import process
 import plotly.graph_objects as go
 import plotly.express as px
 
+@st.cache_data
+def load_world_ports():
+    """Load and cache world ports data"""
+    try:
+        return pd.read_csv("UpdatedPub150.csv")
+    except:
+        return pd.DataFrame({
+            'Main Port Name': ['SINGAPORE', 'ROTTERDAM', 'FUJAIRAH', 'YOKOHAMA', 'BUSAN'],
+            'Latitude': [1.290270, 51.916667, 25.112225, 35.443708, 35.179554],
+            'Longitude': [103.855836, 4.5, 56.336096, 139.638026, 129.075642]
+        })
+
 # Enhanced vessel configurations with detailed technical specifications
 def get_vessel_configs():
     """Get comprehensive vessel configuration data"""
