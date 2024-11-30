@@ -276,6 +276,13 @@ def plot_daily_tracking_enhanced(daily_data: pd.DataFrame) -> go.Figure:
     
     return fig
 
+def world_port_index(port_to_match, world_ports_data):
+    """Find best matching port from world ports data"""
+    if not port_to_match:
+        return None
+    best_match = process.extractOne(port_to_match, world_ports_data['Main Port Name'])
+    return world_ports_data[world_ports_data['Main Port Name'] == best_match[0]].iloc[0]
+
 def route_distance(origin, destination, world_ports_data):
     """Calculate route distance between two ports"""
     try:
