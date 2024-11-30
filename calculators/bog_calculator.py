@@ -921,7 +921,7 @@ def create_voyage_section_enhanced(
     vessel_config: dict, 
     is_ballast: bool = False
 ) -> dict:
-    """Enhanced voyage section with comprehensive calculations"""
+    """Enhanced voyage section with comprehensive calculations."""
     # Initialize return data with default values
     return_data = {
         'voyage_from': '',
@@ -966,7 +966,8 @@ def create_voyage_section_enhanced(
                     min_value=float(heel_reqs['min_heel']),
                     max_value=float(heel_reqs['max_heel']),
                     value=float(heel_reqs['recommended_heel']),
-                    help="Recommended heel based on voyage duration and consumption"
+                    help="Recommended heel based on voyage duration and consumption",
+                    key=f"{key_prefix}heel_quantity"
                 )
             else:
                 initial_cargo = st.number_input(
@@ -974,13 +975,20 @@ def create_voyage_section_enhanced(
                     min_value=0.0,
                     max_value=float(vessel_config['tank_capacity']),
                     value=float(vessel_config['tank_capacity'] * 0.98),
-                    help="Maximum cargo capacity adjusted for tank limits"
+                    help="Maximum cargo capacity adjusted for tank limits",
+                    key=f"{key_prefix}initial_cargo"
                 )
         
         with col2:
-            voyage_from = st.text_input("From Port", key=f"{leg_type}_from")
+            voyage_from = st.text_input(
+                "From Port", 
+                key=f"{key_prefix}voyage_from"
+            )
         with col3:
-            voyage_to = st.text_input("To Port", key=f"{leg_type}_to")
+            voyage_to = st.text_input(
+                "To Port", 
+                key=f"{key_prefix}voyage_to"
+            )
         
         # Calculate distance and voyage details
         if voyage_from and voyage_to:
@@ -994,7 +1002,8 @@ def create_voyage_section_enhanced(
                     max_value=21.0,
                     value=19.0,
                     step=0.1,
-                    help="Optimal speed range for vessel type"
+                    help="Optimal speed range for vessel type",
+                    key=f"{key_prefix}speed"
                 )
             
             voyage_days = float(distance) / (float(speed) * 24.0) if speed > 0 else 0.0
@@ -1023,7 +1032,8 @@ def create_voyage_section_enhanced(
                 min_value=-20.0,
                 max_value=45.0,
                 value=19.5,
-                help="Affects BOG generation and system efficiency"
+                help="Affects BOG generation and system efficiency",
+                key=f"{key_prefix}ambient_temp"
             )
             
             temp_variation = st.number_input(
@@ -1031,7 +1041,8 @@ def create_voyage_section_enhanced(
                 min_value=0.0,
                 max_value=10.0,
                 value=2.0,
-                help="Daily temperature fluctuation range"
+                help="Daily temperature fluctuation range",
+                key=f"{key_prefix}temp_variation"
             )
         
         with col2:
@@ -1040,7 +1051,8 @@ def create_voyage_section_enhanced(
                 min_value=0.0,
                 max_value=10.0,
                 value=1.0,
-                help="Affects sloshing and power requirements"
+                help="Affects sloshing and power requirements",
+                key=f"{key_prefix}wave_height"
             )
             
             wind_speed = st.number_input(
@@ -1048,7 +1060,8 @@ def create_voyage_section_enhanced(
                 min_value=0.0,
                 max_value=50.0,
                 value=15.0,
-                help="Affects power requirements"
+                help="Affects power requirements",
+                key=f"{key_prefix}wind_speed"
             )
 
         tank_pressure = st.number_input(
@@ -1056,13 +1069,15 @@ def create_voyage_section_enhanced(
             min_value=1000.0,
             max_value=1300.0,
             value=1013.0,
-            help="Operating pressure affects BOG rate"
+            help="Operating pressure affects BOG rate",
+            key=f"{key_prefix}tank_pressure"
         )
         
         solar_radiation = st.selectbox(
             "Solar Radiation Level",
             options=['Low', 'Medium', 'High'],
-            help="Affects heat ingress and BOG generation"
+            help="Affects heat ingress and BOG generation",
+            key=f"{key_prefix}solar_radiation"
         )
 
         return_data.update({
@@ -1076,7 +1091,7 @@ def create_voyage_section_enhanced(
             }
         })
 
-    # Continue with Technical tab
+    # Technical Tab
     with tabs[2]:
         st.write("#### Engine & Power Systems")
         
@@ -1087,7 +1102,8 @@ def create_voyage_section_enhanced(
                 min_value=0.5,
                 max_value=1.0,
                 value=0.8,
-                help="Affects engine efficiency"
+                help="Affects engine efficiency",
+                key=f"{key_prefix}engine_load"
             )
             
             if 'MEGI' in vessel_config:
@@ -1096,7 +1112,8 @@ def create_voyage_section_enhanced(
                     min_value=0.0,
                     max_value=float(vessel_config['reliq_capacity']),
                     value=float(vessel_config['reliq_capacity']),
-                    help="Maximum reliquefaction capacity"
+                    help="Maximum reliquefaction capacity",
+                    key=f"{key_prefix}reliq_capacity"
                 )
         
         with col2:
@@ -1105,7 +1122,8 @@ def create_voyage_section_enhanced(
                 min_value=0.0,
                 max_value=20.0,
                 value=5.0,
-                help="Affects insulation efficiency"
+                help="Affects insulation efficiency",
+                key=f"{key_prefix}tank_age"
             )
 
         return_data.update({
@@ -1115,7 +1133,6 @@ def create_voyage_section_enhanced(
                 'reliq_capacity': reliq_capacity if 'MEGI' in vessel_config else 0.0
             }
         })
-
 
     # Economics Tab
     with tabs[3]:
@@ -1128,7 +1145,8 @@ def create_voyage_section_enhanced(
                     min_value=0.0,
                     max_value=50.0,
                     value=15.0,
-                    help="Current LNG market price"
+                    help="Current LNG market price",
+                    key=f"{key_prefix}lng_price"
                 )
                 
                 bunker_price = st.number_input(
@@ -1136,7 +1154,8 @@ def create_voyage_section_enhanced(
                     min_value=0.0,
                     max_value=2000.0,
                     value=800.0,
-                    help="Alternative fuel price"
+                    help="Alternative fuel price",
+                    key=f"{key_prefix}bunker_price"
                 )
             
             with col2:
@@ -1146,7 +1165,8 @@ def create_voyage_section_enhanced(
                     min_value=0.0,
                     max_value=1.0,
                     value=0.15,
-                    help="Cost of power generation"
+                    help="Cost of power generation",
+                    key=f"{key_prefix}electricity_cost"
                 )
                 
                 carbon_price = st.number_input(
@@ -1154,7 +1174,8 @@ def create_voyage_section_enhanced(
                     min_value=0.0,
                     max_value=200.0,
                     value=30.0,
-                    help="Carbon credit market price"
+                    help="Carbon credit market price",
+                    key=f"{key_prefix}carbon_price"
                 )
 
             return_data.update({
@@ -1308,6 +1329,7 @@ def create_voyage_section_enhanced(
             )
 
     return return_data
+
 
 def show_bog_calculator():
     """Main function for the LNG Vessel BOG Calculator"""
