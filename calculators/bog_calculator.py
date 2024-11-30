@@ -7,83 +7,213 @@ from streamlit_folium import st_folium
 import searoute as sr
 from fuzzywuzzy import process
 import plotly.graph_objects as go
+import plotly.express as px
 
-def calculate_daily_bog(initial_volume, days, bog_rate, ambient_temps, wave_heights, 
-                       solar_radiation, tank_pressure, engine_consumption, reliq_capacity):
-    """Calculate daily BOG with all factors including reliquefaction"""
-    daily_volumes = []
-    daily_bog_generated = []
-    daily_bog_consumed = []
-    daily_bog_reliquefied = []
+# Utility Functions
+@st.cache_data
+def load_world_ports():
+    """Load and cache world ports data"""
+    try:
+        return pd.read_csv("UpdatedPub150.csv")
+    except:
+        # Fallback data if file not found
+        return pd.DataFrame({
+            'Main Port Name': ['SINGAPORE', 'ROTTERDAM', 'FUJAIRAH', 'YOKOHAMA', 'BUSAN'],
+            'Latitude': [1.290270, 51.916667, 25.112225, 35.443708, 35.179554],
+            'Longitude': [103.855836, 4.5, 56.336096, 139.638026, 129.075642]
+        })
+
+def get_vessel_configs():
+    """Get vessel configuration data"""
+    return {
+        "174K": {
+            "tank_capacity": 174000,
+            "min_heel": 1500,
+            "max_heel": 3000,
+            "base_bog_rate": 0.15,
+            "reliq_capacity": 2.5,
+            "engine_efficiency": 0.45
+        },
+        "180K": {
+            "tank_capacity": 180000,
+            "min_heel": 1600,
+            "max_heel": 3200,
+            "base_bog_rate": 0.14,
+            "reliq_capacity": 2.8,
+            "engine_efficiency": 0.46
+        }
+    }
+
+def world_port_index(port_to_match, world_ports_data):
+    """Find best matching port from world ports data"""
+    best_match = process.extractOne(port_to_match, world_ports_data['Main Port Name'])
+    return world_ports_data[world_ports_data['Main Port Name'] == best_match[0]].iloc[0]
+
+def route_distance(origin, destination, world_ports_data):
+    """Calculate route distance between two ports"""
+    try:
+        if not origin or not destination:
+            return 0
+        origin_port = world_port_index(origin, world_ports_data)
+        destination_port = world_port_index(destination, world_ports_data)
+        origin_coords = [float(origin_port['Longitude']), float(origin_port['Latitude'])]
+        destination_coords = [float(destination_port['Longitude']), float(destination_port['Latitude'])]
+        sea_route = sr.searoute(origin_coords, destination_coords, units="naut")
+        return int(sea_route['properties']['length'])
+    except Exception as e:
+        st.error(f"Error calculating distance: {str(e)}")
+        return 0
+
+# BOG Calculation Functions
+def calculate_bog_rate(base_rate, tank_pressure, tank_level, ambient_temp, wave_height, solar_radiation):
+    """Calculate BOG rate with all environmental factors"""
+    pressure_factor = 1 + ((tank_pressure - 1013) / 1013) * 0.1
+    level_factor = 1 + (1 - tank_level/100) * 0.05
+    temp_factor = 1 + (ambient_temp - 19.5) / 100
+    wave_factor = 1 + wave_height * 0.02
+    solar_factors = {'Low': 1.0, 'Medium': 1.02, 'High': 1.05}
+    
+    total_factor = (pressure_factor * level_factor * temp_factor * 
+                   wave_factor * solar_factors[solar_radiation])
+    
+    return base_rate * total_factor
+
+def calculate_daily_bog(initial_volume, days, base_bog_rate, ambient_temps, wave_heights, 
+                       solar_radiation, tank_pressure, engine_consumption, reliq_capacity,
+                       reliq_efficiency):
+    """Calculate daily BOG with incremental volume reduction"""
+    daily_data = {
+        'day': [],
+        'remaining_volume': [],
+        'bog_rate': [],
+        'bog_generated': [],
+        'bog_consumed': [],
+        'bog_reliquefied': [],
+        'tank_level': [],
+        'temperature': [],
+        'wave_height': []
+    }
+    
     remaining_volume = initial_volume
     
     for day in range(int(days)):
-        # Calculate day's BOG rate with all factors
-        daily_rate = calculate_bog_rate(
-            bog_rate, 
+        tank_level = (remaining_volume / initial_volume) * 100
+        
+        # Calculate day's BOG rate
+        bog_rate = calculate_bog_rate(
+            base_bog_rate,
             tank_pressure,
-            (remaining_volume / initial_volume) * 100,  # Tank level percentage
+            tank_level,
             ambient_temps[day],
             wave_heights[day],
             solar_radiation
         )
         
         # Calculate BOG generated
-        bog_generated = remaining_volume * (daily_rate / 100)
-        daily_bog_generated.append(bog_generated)
+        bog_generated = remaining_volume * (bog_rate / 100)
         
         # Calculate BOG consumed by engines
         bog_consumed = min(bog_generated, engine_consumption)
-        daily_bog_consumed.append(bog_consumed)
         
         # Calculate BOG reliquefied
         bog_to_reliquify = bog_generated - bog_consumed
-        bog_reliquefied = min(bog_to_reliquify, reliq_capacity)
-        daily_bog_reliquefied.append(bog_reliquefied)
+        bog_reliquefied = min(bog_to_reliquify, reliq_capacity) * reliq_efficiency
         
         # Update remaining volume
         remaining_volume = remaining_volume - bog_generated + bog_reliquefied
-        daily_volumes.append(remaining_volume)
+        
+        # Store daily data
+        daily_data['day'].append(day)
+        daily_data['remaining_volume'].append(remaining_volume)
+        daily_data['bog_rate'].append(bog_rate)
+        daily_data['bog_generated'].append(bog_generated)
+        daily_data['bog_consumed'].append(bog_consumed)
+        daily_data['bog_reliquefied'].append(bog_reliquefied)
+        daily_data['tank_level'].append(tank_level)
+        daily_data['temperature'].append(ambient_temps[day])
+        daily_data['wave_height'].append(wave_heights[day])
     
-    return {
-        'daily_volumes': daily_volumes,
-        'daily_bog_generated': daily_bog_generated,
-        'daily_bog_consumed': daily_bog_consumed,
-        'daily_bog_reliquefied': daily_bog_reliquefied
-    }
+    return pd.DataFrame(daily_data)
 
 def calculate_economics(daily_data, lng_price, bunker_price, electricity_cost, power_consumption):
-    """Calculate comprehensive economics"""
-    total_bog_generated = sum(daily_data['daily_bog_generated'])
-    total_bog_consumed = sum(daily_data['daily_bog_consumed'])
-    total_bog_reliquefied = sum(daily_data['daily_bog_reliquefied'])
+    """Calculate comprehensive economics for the voyage"""
+    total_bog_generated = daily_data['bog_generated'].sum()
+    total_bog_consumed = daily_data['bog_consumed'].sum()
+    total_bog_reliquefied = daily_data['bog_reliquefied'].sum()
     
-    # Convert to energy units and calculate costs
     lng_cost = total_bog_generated * lng_price
     fuel_savings = total_bog_consumed * bunker_price
-    reliq_cost = total_bog_reliquefied * power_consumption * electricity_cost
+    reliq_cost = total_bog_reliquefied * power_consumption * electricity_cost * 24  # daily to hourly
     
     return {
         'lng_value_lost': lng_cost,
         'fuel_savings': fuel_savings,
         'reliq_cost': reliq_cost,
-        'net_benefit': fuel_savings - reliq_cost
+        'net_benefit': fuel_savings - reliq_cost,
+        'total_bog_generated': total_bog_generated,
+        'total_bog_consumed': total_bog_consumed,
+        'total_bog_reliquefied': total_bog_reliquefied
     }
 
-def plot_daily_tracking(daily_data, voyage_days):
-    """Create interactive plot for daily tracking"""
-    days = list(range(int(voyage_days)))
+# Visualization Functions
+def plot_combined_route(laden_ports, ballast_ports, world_ports_data):
+    """Plot combined route on a single map"""
+    m = folium.Map(location=[0, 0], zoom_start=2)
+    all_ports = laden_ports + ballast_ports
+
+    if len(all_ports) >= 2 and all(all_ports):
+        coordinates = []
+        for i in range(len(all_ports) - 1):
+            try:
+                start_port = world_port_index(all_ports[i], world_ports_data)
+                end_port = world_port_index(all_ports[i + 1], world_ports_data)
+                start_coords = [float(start_port['Latitude']), float(start_port['Longitude'])]
+                end_coords = [float(end_port['Latitude']), float(end_port['Longitude'])]
+                
+                # Add port markers
+                folium.Marker(
+                    start_coords,
+                    popup=all_ports[i],
+                    icon=folium.Icon(color='green' if i == 0 else 'blue')
+                ).add_to(m)
+                
+                if i == len(all_ports) - 2:
+                    folium.Marker(
+                        end_coords,
+                        popup=all_ports[i + 1],
+                        icon=folium.Icon(color='red')
+                    ).add_to(m)
+                
+                # Add route line
+                route = sr.searoute(start_coords[::-1], end_coords[::-1])
+                folium.PolyLine(
+                    locations=[list(reversed(coord)) for coord in route['geometry']['coordinates']], 
+                    color="red",
+                    weight=2,
+                    opacity=0.8
+                ).add_to(m)
+                
+                coordinates.extend([start_coords, end_coords])
+            except Exception as e:
+                st.error(f"Error plotting route: {str(e)}")
+        
+        if coordinates:
+            m.fit_bounds(coordinates)
     
+    return m
+
+def plot_daily_tracking(daily_data):
+    """Create interactive plot for daily tracking"""
     fig = go.Figure()
     
     # Add traces for each metric
-    fig.add_trace(go.Scatter(x=days, y=daily_data['daily_volumes'],
+    fig.add_trace(go.Scatter(x=daily_data['day'], y=daily_data['remaining_volume'],
                             name='Remaining Volume', line=dict(color='blue')))
-    fig.add_trace(go.Scatter(x=days, y=daily_data['daily_bog_generated'],
+    fig.add_trace(go.Scatter(x=daily_data['day'], y=daily_data['bog_generated'],
                             name='BOG Generated', line=dict(color='red')))
-    fig.add_trace(go.Scatter(x=days, y=daily_data['daily_bog_consumed'],
+    fig.add_trace(go.Scatter(x=daily_data['day'], y=daily_data['bog_consumed'],
                             name='BOG Consumed', line=dict(color='green')))
-    fig.add_trace(go.Scatter(x=days, y=daily_data['daily_bog_reliquefied'],
+    fig.add_trace(go.Scatter(x=daily_data['day'], y=daily_data['bog_reliquefied'],
                             name='BOG Reliquefied', line=dict(color='purple')))
     
     fig.update_layout(
@@ -95,28 +225,44 @@ def plot_daily_tracking(daily_data, voyage_days):
     
     return fig
 
-def create_voyage_section(leg_type, world_ports_data, is_ballast=False):
-    """Enhanced voyage section with comprehensive inputs"""
+# Main Application Function
+def create_voyage_section(leg_type, world_ports_data, vessel_config, is_ballast=False):
+    """Create voyage section with comprehensive calculations"""
     st.subheader(f"{leg_type} Leg Details")
     
     tabs = st.tabs(["Cargo & Route", "Environmental", "Operations", "Economics", "Results"])
     
+    # Cargo & Route Tab
     with tabs[0]:
         col1, col2, col3 = st.columns(3)
         with col1:
             if not is_ballast:
-                initial_cargo = st.number_input("Initial Cargo Volume (m³)", 0.0, 180000.0, 170000.0)
+                initial_cargo = st.number_input(
+                    "Initial Cargo Volume (m³)", 
+                    0.0, 
+                    vessel_config['tank_capacity'], 
+                    vessel_config['tank_capacity'] * 0.98
+                )
             else:
-                initial_cargo = st.number_input("Heel Quantity (m³)", 1500.0, 3000.0, 2000.0)
+                initial_cargo = st.number_input(
+                    "Heel Quantity (m³)", 
+                    vessel_config['min_heel'],
+                    vessel_config['max_heel'],
+                    vessel_config['min_heel']
+                )
+        
         with col2:
             voyage_from = st.text_input(f"From Port", key=f"{leg_type}_from")
         with col3:
             voyage_to = st.text_input(f"To Port", key=f"{leg_type}_to")
         
-        distance = route_distance(voyage_from, voyage_to, world_ports_data) if voyage_from and voyage_to else 0
+        distance = route_distance(voyage_from, voyage_to, world_ports_data)
         speed = st.number_input("Speed (knots)", 1.0, 25.0, 15.0)
         voyage_days = distance / (speed * 24) if speed > 0 else 0
         
+        st.metric("Estimated Voyage Days", f"{voyage_days:.1f}")
+    
+    # Environmental Tab
     with tabs[1]:
         col1, col2 = st.columns(2)
         with col1:
@@ -128,15 +274,23 @@ def create_voyage_section(leg_type, world_ports_data, is_ballast=False):
         
         solar_radiation = st.selectbox("Solar Radiation", ['Low', 'Medium', 'High'])
         tank_pressure = st.number_input("Tank Pressure (mbar)", 1000.0, 1300.0, 1013.0)
-        
+    
+    # Operations Tab
     with tabs[2]:
         col1, col2 = st.columns(2)
         with col1:
             engine_consumption = st.number_input("Engine Gas Consumption (m³/day)", 0.0, 500.0, 150.0)
-            reliq_capacity = st.number_input("Reliquefaction Capacity (m³/day)", 0.0, 50.0, 20.0)
+            reliq_capacity = st.number_input(
+                "Reliquefaction Capacity (m³/day)", 
+                0.0, 
+                vessel_config['reliq_capacity'] * 24,
+                vessel_config['reliq_capacity'] * 24
+            )
         with col2:
             power_consumption = st.number_input("Power Consumption (kWh/m³)", 0.0, 1000.0, 800.0)
-            
+            reliq_efficiency = st.number_input("Reliquefaction Efficiency (%)", 0.0, 100.0, 85.0) / 100
+    
+    # Economics Tab
     with tabs[3]:
         col1, col2 = st.columns(2)
         with col1:
@@ -144,7 +298,8 @@ def create_voyage_section(leg_type, world_ports_data, is_ballast=False):
             bunker_price = st.number_input("Bunker Price ($/mt)", 0.0, 2000.0, 800.0)
         with col2:
             electricity_cost = st.number_input("Electricity Cost ($/kWh)", 0.0, 1.0, 0.15)
-            
+    
+    # Results Tab
     with tabs[4]:
         if voyage_days > 0:
             # Generate daily temperature and wave height profiles
@@ -153,28 +308,47 @@ def create_voyage_section(leg_type, world_ports_data, is_ballast=False):
             
             # Calculate daily BOG and volumes
             daily_data = calculate_daily_bog(
-                initial_cargo, voyage_days, 0.15, daily_temps, daily_waves,
-                solar_radiation, tank_pressure, engine_consumption, reliq_capacity
+                initial_cargo,
+                voyage_days,
+                vessel_config['base_bog_rate'],
+                daily_temps,
+                daily_waves,
+                solar_radiation,
+                tank_pressure,
+                engine_consumption,
+                reliq_capacity,
+                reliq_efficiency
             )
             
             # Calculate economics
             economics = calculate_economics(
-                daily_data, lng_price, bunker_price,
-                electricity_cost, power_consumption
+                daily_data,
+                lng_price,
+                bunker_price,
+                electricity_cost,
+                power_consumption
             )
             
             # Display results
-            col1, col2 = st.columns(2)
+            # Display results
+            col1, col2, col3 = st.columns(3)
             with col1:
-                st.metric("Final Cargo Volume", f"{daily_data['daily_volumes'][-1]:.1f} m³")
-                st.metric("Total BOG Generated", f"{sum(daily_data['daily_bog_generated']):.1f} m³")
+                st.metric("Final Cargo Volume", f"{daily_data['remaining_volume'].iloc[-1]:.1f} m³")
+                st.metric("Total BOG Generated", f"{economics['total_bog_generated']:.1f} m³")
             with col2:
+                st.metric("Total BOG Consumed", f"{economics['total_bog_consumed']:.1f} m³")
+                st.metric("Total BOG Reliquefied", f"{economics['total_bog_reliquefied']:.1f} m³")
+            with col3:
                 st.metric("Net Cost Benefit", f"${economics['net_benefit']:,.2f}")
-                st.metric("Total BOG Reliquefied", f"{sum(daily_data['daily_bog_reliquefied']):.1f} m³")
+                st.metric("Reliquefaction Cost", f"${economics['reliq_cost']:,.2f}")
             
             # Plot daily tracking
-            st.plotly_chart(plot_daily_tracking(daily_data, voyage_days))
+            st.plotly_chart(plot_daily_tracking(daily_data), use_container_width=True)
             
+            # Show detailed data table
+            if st.checkbox("Show Detailed Daily Data"):
+                st.dataframe(daily_data.round(2))
+    
     return {
         'voyage_from': voyage_from,
         'voyage_to': voyage_to,
@@ -185,16 +359,37 @@ def create_voyage_section(leg_type, world_ports_data, is_ballast=False):
 
 def show_bog_calculator():
     """Main function to show enhanced BOG calculator"""
-    world_ports_data = load_world_ports()
-    
     st.title("LNG Vessel Optimization Suite")
     st.markdown("### Comprehensive BOG and Economics Calculator")
     
-    laden_data = create_voyage_section("Laden", world_ports_data)
-    st.markdown("---")
-    ballast_data = create_voyage_section("Ballast", world_ports_data, True)
+    # Load data and configurations
+    world_ports_data = load_world_ports()
+    vessel_configs = get_vessel_configs()
     
-    # Map visualization (keeping existing map functionality)
+    # Vessel selection
+    vessel_type = st.selectbox("Select Vessel Type", list(vessel_configs.keys()))
+    vessel_config = vessel_configs[vessel_type]
+    
+    # Display vessel specifications
+    with st.expander("Vessel Specifications"):
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write(f"Tank Capacity: {vessel_config['tank_capacity']} m³")
+            st.write(f"Base BOG Rate: {vessel_config['base_bog_rate']}%")
+            st.write(f"Engine Efficiency: {vessel_config['engine_efficiency']*100}%")
+        with col2:
+            st.write(f"Min Heel: {vessel_config['min_heel']} m³")
+            st.write(f"Max Heel: {vessel_config['max_heel']} m³")
+            st.write(f"Reliq Capacity: {vessel_config['reliq_capacity']} ton/hour")
+    
+    st.markdown("---")
+    
+    # Create voyage sections
+    laden_data = create_voyage_section("Laden", world_ports_data, vessel_config)
+    st.markdown("---")
+    ballast_data = create_voyage_section("Ballast", world_ports_data, vessel_config, True)
+    
+    # Map visualization
     st.markdown("---")
     st.subheader("Route Visualization")
     laden_ports = [laden_data['voyage_from'], laden_data['voyage_to']]
@@ -203,7 +398,30 @@ def show_bog_calculator():
     if all(laden_ports + ballast_ports):
         route_map = plot_combined_route(laden_ports, ballast_ports, world_ports_data)
         st_folium(route_map, width=800, height=500)
+        
+        # Display total voyage statistics
+        if laden_data['daily_data'] is not None and ballast_data['daily_data'] is not None:
+            st.markdown("### Total Voyage Statistics")
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                total_distance = laden_data['distance'] + ballast_data['distance']
+                st.metric("Total Distance", f"{total_distance:,} NM")
+            
+            with col2:
+                total_bog = (laden_data['economics']['total_bog_generated'] + 
+                           ballast_data['economics']['total_bog_generated'])
+                st.metric("Total BOG Generated", f"{total_bog:,.1f} m³")
+            
+            with col3:
+                total_benefit = (laden_data['economics']['net_benefit'] + 
+                               ballast_data['economics']['net_benefit'])
+                st.metric("Total Voyage Benefit", f"${total_benefit:,.2f}")
 
 if __name__ == "__main__":
-    st.set_page_config(page_title="LNG Optimization Suite", page_icon="🚢", layout="wide")
+    st.set_page_config(
+        page_title="LNG Optimization Suite",
+        page_icon="🚢",
+        layout="wide"
+    )
     show_bog_calculator()
