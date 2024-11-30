@@ -915,14 +915,10 @@ def plot_combined_metrics(
     
     return fig
 
-def create_voyage_section_enhanced(
-    leg_type: str, 
-    world_ports_data: pd.DataFrame,
-    vessel_config: dict, 
-    is_ballast: bool = False
-) -> dict:
+```python
+def create_voyage_section_enhanced(leg_type: str, world_ports_data: pd.DataFrame, vessel_config: dict, is_ballast: bool = False) -> dict:
     """Enhanced voyage section with comprehensive calculations"""
-    # Initialize return data with default values
+    # Initialize return data
     return_data = {
         'voyage_from': '',
         'voyage_to': '',
@@ -930,12 +926,14 @@ def create_voyage_section_enhanced(
         'voyage_days': 0.0,
         'initial_cargo': 0.0,
         'bog_rate': 0.0,
-        'power_reqs': None,
-        'daily_profile': None,
         'economics': None,
-        'heel_requirements': None
+        'power_reqs': None,
+        'daily_profile': None
     }
-
+    
+    # Generate unique key prefix
+    key_prefix = "laden_" if not is_ballast else "ballast_"
+    
     st.subheader(f"{leg_type} Leg Details")
     
     tabs = st.tabs([
@@ -950,54 +948,60 @@ def create_voyage_section_enhanced(
     with tabs[0]:
         col1, col2, col3 = st.columns(3)
         with col1:
-            # Calculate heel requirements
-            if is_ballast:
-                heel_reqs = calculate_heel_requirements(
-                    tank_capacity=vessel_config['tank_capacity'],
-                    voyage_days=15.0,  # Default estimate
-                    daily_consumption=vessel_config['daily_consumption']
-                )
-                st.write("#### Recommended Heel Ranges")
-                st.write(f"Minimum: {heel_reqs['min_heel']:,.0f} m³")
-                st.write(f"Maximum: {heel_reqs['max_heel']:,.0f} m³")
-                
-                initial_cargo = st.number_input(
-                    "Heel Quantity (m³)",
-                    min_value=float(heel_reqs['min_heel']),
-                    max_value=float(heel_reqs['max_heel']),
-                    value=float(heel_reqs['recommended_heel']),
-                    help="Recommended heel based on voyage duration and consumption"
-                )
-            else:
+            if not is_ballast:
                 initial_cargo = st.number_input(
                     "Initial Cargo Volume (m³)",
                     min_value=0.0,
                     max_value=float(vessel_config['tank_capacity']),
                     value=float(vessel_config['tank_capacity'] * 0.98),
-                    help="Maximum cargo capacity adjusted for tank limits"
+                    step=100.0,
+                    key=f"{key_prefix}cargo_volume",
+                    help="Initial cargo volume for laden voyage"
                 )
+            else:
+                initial_cargo = st.number_input(
+                    "Heel Quantity (m³)",
+                    min_value=float(vessel_config['min_heel']),
+                    max_value=float(vessel_config['max_heel']),
+                    value=float(vessel_config['min_heel']),
+                    step=100.0,
+                    key=f"{key_prefix}heel_qty",
+                    help="Minimum heel quantity required"
+                )
+            return_data['initial_cargo'] = initial_cargo
         
         with col2:
-            voyage_from = st.text_input("From Port", key=f"{leg_type}_from")
-        with col3:
-            voyage_to = st.text_input("To Port", key=f"{leg_type}_to")
+            voyage_from = st.text_input(
+                "From Port",
+                key=f"{key_prefix}from_port"
+            )
+            return_data['voyage_from'] = voyage_from
         
-        # Calculate distance and voyage details
+        with col3:
+            voyage_to = st.text_input(
+                "To Port",
+                key=f"{key_prefix}to_port"
+            )
+            return_data['voyage_to'] = voyage_to
+
         if voyage_from and voyage_to:
             distance = route_distance(voyage_from, voyage_to, world_ports_data)
+            return_data['distance'] = distance
             
             col1, col2 = st.columns(2)
             with col1:
                 speed = st.number_input(
                     "Speed (knots)",
-                    min_value=10.0,
-                    max_value=21.0,
-                    value=19.0,
+                    min_value=1.0,
+                    max_value=25.0,
+                    value=15.0,
                     step=0.1,
-                    help="Optimal speed range for vessel type"
+                    key=f"{key_prefix}speed",
+                    help="Vessel service speed"
                 )
-            
-            voyage_days = float(distance) / (float(speed) * 24.0) if speed > 0 else 0.0
+                
+                voyage_days = float(distance) / (float(speed) * 24.0) if speed > 0 else 0.0
+                return_data['voyage_days'] = voyage_days
             
             with col2:
                 st.metric(
@@ -1006,308 +1010,220 @@ def create_voyage_section_enhanced(
                     help="Based on distance and speed"
                 )
 
-            return_data.update({
-                'voyage_from': voyage_from,
-                'voyage_to': voyage_to,
-                'distance': distance,
-                'speed': speed,
-                'voyage_days': voyage_days
-            })
-
     # Environmental Tab
     with tabs[1]:
         col1, col2 = st.columns(2)
         with col1:
             ambient_temp = st.number_input(
-                "Average Ambient Temperature (°C)",
+                "Ambient Temperature (°C)",
                 min_value=-20.0,
                 max_value=45.0,
                 value=19.5,
-                help="Affects BOG generation and system efficiency"
+                step=0.5,
+                key=f"{key_prefix}ambient_temp",
+                help="Average ambient temperature"
             )
             
-            temp_variation = st.number_input(
-                "Temperature Variation (±°C)",
-                min_value=0.0,
-                max_value=10.0,
-                value=2.0,
-                help="Daily temperature fluctuation range"
-            )
-        
-        with col2:
             wave_height = st.number_input(
-                "Significant Wave Height (m)",
+                "Wave Height (m)",
                 min_value=0.0,
                 max_value=10.0,
                 value=1.0,
-                help="Affects sloshing and power requirements"
+                step=0.1,
+                key=f"{key_prefix}wave_height",
+                help="Significant wave height"
+            )
+        
+        with col2:
+            tank_pressure = st.number_input(
+                "Tank Pressure (mbar)",
+                min_value=1000.0,
+                max_value=1300.0,
+                value=1013.0,
+                step=1.0,
+                key=f"{key_prefix}tank_pressure",
+                help="Tank operating pressure"
             )
             
-            wind_speed = st.number_input(
-                "Average Wind Speed (knots)",
-                min_value=0.0,
-                max_value=50.0,
-                value=15.0,
-                help="Affects power requirements"
+            solar_radiation = st.selectbox(
+                "Solar Radiation Level",
+                options=['Low', 'Medium', 'High'],
+                key=f"{key_prefix}solar_radiation",
+                help="Solar radiation impact"
             )
 
-        tank_pressure = st.number_input(
-            "Tank Pressure (mbar)",
-            min_value=1000.0,
-            max_value=1300.0,
-            value=1013.0,
-            help="Operating pressure affects BOG rate"
-        )
-        
-        solar_radiation = st.selectbox(
-            "Solar Radiation Level",
-            options=['Low', 'Medium', 'High'],
-            help="Affects heat ingress and BOG generation"
-        )
-
-        return_data.update({
-            'environmental': {
-                'ambient_temp': ambient_temp,
-                'temp_variation': temp_variation,
-                'wave_height': wave_height,
-                'wind_speed': wind_speed,
-                'tank_pressure': tank_pressure,
-                'solar_radiation': solar_radiation
-            }
-        })
-
-    # Continue with Technical tab
+    # Technical Tab
     with tabs[2]:
-        st.write("#### Engine & Power Systems")
-        
         col1, col2 = st.columns(2)
         with col1:
-            engine_load = st.slider(
-                "Engine Load Factor",
-                min_value=0.5,
-                max_value=1.0,
-                value=0.8,
-                help="Affects engine efficiency"
+            engine_load = st.number_input(
+                "Engine Load (%)",
+                min_value=50.0,
+                max_value=100.0,
+                value=85.0,
+                step=5.0,
+                key=f"{key_prefix}engine_load",
+                help="Engine load factor"
             )
             
-            if 'MEGI' in vessel_config:
+            if 'MEGI' in str(vessel_config):
                 reliq_capacity = st.number_input(
                     "Reliquefaction Capacity (tons/hour)",
                     min_value=0.0,
                     max_value=float(vessel_config['reliq_capacity']),
                     value=float(vessel_config['reliq_capacity']),
-                    help="Maximum reliquefaction capacity"
+                    step=0.1,
+                    key=f"{key_prefix}reliq_capacity",
+                    help="Reliquefaction plant capacity"
                 )
-        
-        with col2:
-            tank_age = st.number_input(
-                "Tank Age (years)",
-                min_value=0.0,
-                max_value=20.0,
-                value=5.0,
-                help="Affects insulation efficiency"
-            )
-
-        return_data.update({
-            'technical': {
-                'engine_load': engine_load,
-                'tank_age': tank_age,
-                'reliq_capacity': reliq_capacity if 'MEGI' in vessel_config else 0.0
-            }
-        })
-
+            else:
+                reliq_capacity = 0.0
 
     # Economics Tab
     with tabs[3]:
-        if voyage_days > 0:
-            col1, col2 = st.columns(2)
-            with col1:
-                st.write("#### Fuel & Energy Prices")
-                lng_price = st.number_input(
-                    "LNG Price ($/mmBTU)",
-                    min_value=0.0,
-                    max_value=50.0,
-                    value=15.0,
-                    help="Current LNG market price"
-                )
-                
-                bunker_price = st.number_input(
-                    "Bunker Price ($/mt)",
-                    min_value=0.0,
-                    max_value=2000.0,
-                    value=800.0,
-                    help="Alternative fuel price"
-                )
+        col1, col2 = st.columns(2)
+        with col1:
+            lng_price = st.number_input(
+                "LNG Price ($/mmBTU)",
+                min_value=0.0,
+                max_value=50.0,
+                value=15.0,
+                step=0.1,
+                key=f"{key_prefix}lng_price",
+                help="Current LNG market price"
+            )
             
-            with col2:
-                st.write("#### Operating Costs")
-                electricity_cost = st.number_input(
-                    "Electricity Cost ($/kWh)",
-                    min_value=0.0,
-                    max_value=1.0,
-                    value=0.15,
-                    help="Cost of power generation"
-                )
-                
-                carbon_price = st.number_input(
-                    "Carbon Price ($/ton CO2)",
-                    min_value=0.0,
-                    max_value=200.0,
-                    value=30.0,
-                    help="Carbon credit market price"
-                )
+            bunker_price = st.number_input(
+                "Bunker Price ($/mt)",
+                min_value=0.0,
+                max_value=2000.0,
+                value=800.0,
+                step=1.0,
+                key=f"{key_prefix}bunker_price",
+                help="Alternative fuel price"
+            )
+        
+        with col2:
+            electricity_cost = st.number_input(
+                "Electricity Cost ($/kWh)",
+                min_value=0.0,
+                max_value=1.0,
+                value=0.15,
+                step=0.01,
+                key=f"{key_prefix}electricity_cost",
+                help="Power generation cost"
+            )
 
-            return_data.update({
-                'economics_input': {
-                    'lng_price': lng_price,
-                    'bunker_price': bunker_price,
-                    'electricity_cost': electricity_cost,
-                    'carbon_price': carbon_price
-                }
-            })
+    # Perform calculations if we have valid voyage days
+    if voyage_days > 0:
+        # Calculate BOG rate
+        bog_rate = calculate_enhanced_bog_rate(
+            vessel_config['base_bog_rate'],
+            tank_pressure,
+            100.0,  # Initial tank level
+            ambient_temp,
+            wave_height,
+            solar_radiation,
+            "MEGI" if 'MEGI' in str(vessel_config) else "DFDE",
+            is_ballast
+        )
+        return_data['bog_rate'] = bog_rate
 
-    # Analysis Tab
-    with tabs[4]:
-        if voyage_days > 0:
-            # Generate temperature and wave profiles
-            temps = np.random.normal(
-                return_data['environmental']['ambient_temp'],
-                return_data['environmental']['temp_variation'],
-                int(voyage_days)
-            )
-            waves = np.random.normal(
-                return_data['environmental']['wave_height'],
-                0.5,
-                int(voyage_days)
-            )
-            
-            # Calculate daily BOG profile
-            daily_profile = calculate_daily_bog_profile(
-                initial_volume=initial_cargo,
-                voyage_days=voyage_days,
-                vessel_type="MEGI" if 'MEGI' in vessel_config else "DFDE",
-                ambient_temps=temps,
-                wave_heights=waves,
-                solar_radiation=return_data['environmental']['solar_radiation'],
-                tank_pressure=return_data['environmental']['tank_pressure'],
-                tank_age=return_data['technical']['tank_age']
-            )
-            
-            # Calculate power requirements
-            power_reqs = calculate_power_requirements(
-                vessel_type="MEGI" if 'MEGI' in vessel_config else "DFDE",
-                bog_generated=daily_profile['bog_volume'].mean(),
-                reliq_capacity=return_data['technical'].get('reliq_capacity', 0.0),
-                ambient_temp=return_data['environmental']['ambient_temp'],
-                wave_height=return_data['environmental']['wave_height'],
-                speed=return_data['speed'],
-                wind_speed=return_data['environmental']['wind_speed']
-            )
-            
-            # Calculate economics
-            economics = calculate_economic_metrics(
-                vessel_type="MEGI" if 'MEGI' in vessel_config else "DFDE",
-                power_requirements=power_reqs,
-                bog_generated=daily_profile['bog_volume'].sum(),
-                bog_reliquefied=daily_profile['bog_volume'].sum() * 
-                               vessel_config.get('reliq_efficiency', 0.0),
-                lng_price=return_data['economics_input']['lng_price'],
-                bunker_price=return_data['economics_input']['bunker_price'],
-                electricity_cost=return_data['economics_input']['electricity_cost'],
-                voyage_days=voyage_days,
-                carbon_price=return_data['economics_input']['carbon_price']
-            )
-            
-            # Store calculated results
-            return_data.update({
-                'daily_profile': daily_profile,
-                'power_reqs': power_reqs,
-                'economics': economics
-            })
-            
-            # Display Results
+        # Calculate power requirements
+        power_reqs = calculate_power_requirements(
+            vessel_type="MEGI" if 'MEGI' in str(vessel_config) else "DFDE",
+            bog_generated=initial_cargo * bog_rate / 100.0,
+            reliq_capacity=reliq_capacity,
+            ambient_temp=ambient_temp,
+            wave_height=wave_height,
+            speed=speed
+        )
+        return_data['power_reqs'] = power_reqs
+
+        # Calculate daily profile
+        daily_profile = pd.DataFrame({
+            'day': range(int(voyage_days)),
+            'remaining_volume': [
+                initial_cargo - (initial_cargo * bog_rate / 100.0 * day)
+                for day in range(int(voyage_days))
+            ],
+            'tank_level': [
+                100.0 * (initial_cargo - (initial_cargo * bog_rate / 100.0 * day)) / initial_cargo
+                for day in range(int(voyage_days))
+            ]
+        })
+        return_data['daily_profile'] = daily_profile
+
+        # Calculate economics
+        economics = calculate_economic_metrics(
+            vessel_type="MEGI" if 'MEGI' in str(vessel_config) else "DFDE",
+            power_requirements=power_reqs,
+            bog_generated=initial_cargo * bog_rate / 100.0 * voyage_days,
+            bog_reliquefied=min(
+                initial_cargo * bog_rate / 100.0 * voyage_days,
+                reliq_capacity * 24 * voyage_days
+            ),
+            lng_price=lng_price,
+            bunker_price=bunker_price,
+            electricity_cost=electricity_cost,
+            voyage_days=voyage_days
+        )
+        return_data['economics'] = economics
+
+        # Display Results in Analysis Tab
+        with tabs[4]:
             st.write("### Performance Analysis")
             
-            # Key Metrics
             col1, col2, col3 = st.columns(3)
             with col1:
                 st.metric(
-                    "Average BOG Rate",
-                    f"{daily_profile['bog_rate'].mean():.3f}%/day",
-                    help="Average daily boil-off rate"
+                    "BOG Rate (%/day)",
+                    f"{bog_rate:.3f}",
+                    help="Daily boil-off rate"
                 )
                 st.metric(
-                    "Total BOG Generated",
-                    f"{daily_profile['bog_volume'].sum():.1f} m³",
+                    "Total BOG (m³)",
+                    f"{initial_cargo * bog_rate / 100.0 * voyage_days:.1f}",
                     help="Total boil-off gas volume"
                 )
             
             with col2:
                 st.metric(
-                    "Power Consumption",
-                    f"{power_reqs['total_power']:.1f} MW",
+                    "Power Consumption (MW)",
+                    f"{power_reqs['total_power']:.1f}",
                     help="Total power requirement"
                 )
-                if 'MEGI' in vessel_config:
+                if 'MEGI' in str(vessel_config):
                     st.metric(
-                        "Reliquefaction Power",
-                        f"{power_reqs['reliq_power']:.1f} MW",
+                        "Reliquefaction Power (MW)",
+                        f"{power_reqs['reliq_power']:.1f}",
                         help="Power used for reliquefaction"
                     )
             
             with col3:
                 st.metric(
-                    "Net Economic Benefit",
-                    f"${economics['net_benefit']:,.2f}",
-                    help="Total value generated"
+                    "Net Benefit ($)",
+                    f"{economics['net_benefit']:,.2f}",
+                    help="Total economic benefit"
                 )
                 st.metric(
-                    "Environmental Value",
-                    f"${economics['emissions_value']:,.2f}",
-                    help="Value of emissions reduction"
+                    "Environmental Value ($)",
+                    f"{economics['emissions_value']:,.2f}",
+                    help="Environmental impact value"
                 )
-            
-            # Visualizations
-            st.write("### Detailed Analysis")
-            
-            # Daily Profile Chart
-            st.plotly_chart(
-                create_daily_profile_chart(daily_profile),
-                use_container_width=True
-            )
-            
-            # BOG Flow and Power Distribution
-            st.plotly_chart(
-                create_sankey_diagram(
-                    bog_data={
-                        'bog_reliquefied': daily_profile['bog_volume'].sum() * 
-                                         vessel_config.get('reliq_efficiency', 0.0),
-                        'bog_consumed': power_reqs['engine_power'] * voyage_days,
-                        'bog_to_gcu': max(0, daily_profile['bog_volume'].sum() - 
-                                        (power_reqs['engine_power'] * voyage_days))
-                    },
-                    power_data=power_reqs
-                ),
-                use_container_width=True
-            )
-            
-            # Economic Analysis
-            st.plotly_chart(
-                create_economic_summary_chart(economics),
-                use_container_width=True
-            )
-            
-            # Efficiency Analysis
+
+            # Show visualizations
             st.plotly_chart(
                 plot_vessel_efficiency_chart(
-                    vessel_type="MEGI" if 'MEGI' in vessel_config else "DFDE",
-                    power_data=power_reqs,
-                    daily_data=daily_profile
+                    "MEGI" if 'MEGI' in str(vessel_config) else "DFDE",
+                    power_reqs,
+                    daily_profile
                 ),
                 use_container_width=True
             )
 
     return return_data
+
 
 def show_bog_calculator():
     """Main function for the LNG Vessel BOG Calculator"""
