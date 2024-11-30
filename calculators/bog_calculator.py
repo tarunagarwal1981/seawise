@@ -105,12 +105,14 @@ def calculate_adjusted_bog(base_bog_rate, ambient_temp, wave_height, solar_radia
     solar_adjustment = calculate_solar_effect(base_bog_rate, solar_radiation)
     return round(temp_adjusted_rate + sea_state_adjustment + solar_adjustment, 4)
 
-def calculate_heel_qty(distance, speed, consumption_rate, adjusted_bog_rate, extra_days=3):
-    """Calculate required heel quantity"""
+def calculate_bog_generated(heel_qty, adjusted_bog_rate, voyage_days):
+    """Calculate BOG generated during the voyage"""
+    return round((heel_qty * (adjusted_bog_rate / 100)) * voyage_days, 2)
+
+def calculate_bog_required(distance, speed, consumption_rate):
+    """Calculate total BOG required for the voyage"""
     voyage_days = distance / (speed * 24)
-    total_bog = voyage_days * consumption_rate
-    extra_bog = extra_days * consumption_rate
-    return round(total_bog + extra_bog, 2)
+    return round(voyage_days * consumption_rate, 2)
 
 # Enhanced Voyage Section
 def create_voyage_section(leg_type, world_ports_data, is_ballast=False):
@@ -138,8 +140,19 @@ def create_voyage_section(leg_type, world_ports_data, is_ballast=False):
         solar_radiation = st.selectbox(f"{leg_type} Solar Radiation Level", options=['Low', 'Medium', 'High'], key=f"{leg_type}_solar")
 
     if is_ballast:
-        heel_qty = calculate_heel_qty(distance, speed, consumption_rate, calculate_adjusted_bog(0.15, ambient_temp, wave_height, solar_radiation))
-        st.number_input(f"{leg_type} Heel Quantity (m³)", value=heel_qty, disabled=True, key=f"{leg_type}_heel")
+        heel_qty = st.number_input(f"{leg_type} Heel Quantity (m³)", min_value=0.0, step=10.0, key=f"{leg_type}_heel")
+        adjusted_bog_rate = calculate_adjusted_bog(0.15, ambient_temp, wave_height, solar_radiation)
+        voyage_days = distance / (speed * 24)
+        bog_generated = calculate_bog_generated(heel_qty, adjusted_bog_rate, voyage_days)
+        bog_required = calculate_bog_required(distance, speed, consumption_rate)
+        
+        st.write(f"BOG Generated: {bog_generated} m³")
+        st.write(f"BOG Required: {bog_required} m³")
+        
+        if bog_generated >= bog_required:
+            st.success("Sufficient BOG generated for the voyage.")
+        else:
+            st.error("Insufficient BOG. Adjust heel quantity or conditions.")
     
     return {
         'voyage_from': voyage_from,
@@ -154,12 +167,12 @@ def create_voyage_section(leg_type, world_ports_data, is_ballast=False):
 
 # Main Function
 def show_bog_calculator():
-    st.title("Enhanced BOG Calculator with Heel Quantity Calculation")
+    st.title("Enhanced BOG Calculator with Validation")
     st.markdown("""
     ### Features:
     1. Single route map for Laden and Ballast legs.
     2. Automated distance calculation based on port selection.
-    3. Heel quantity calculation for ballast leg.
+    3. Validation of BOG generated vs. required for the voyage.
     """)
     
     world_ports_data = load_world_ports()
