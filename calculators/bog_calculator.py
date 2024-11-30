@@ -8,6 +8,7 @@ import searoute as sr
 from fuzzywuzzy import process
 import plotly.graph_objects as go
 import plotly.express as px
+from plotly.subplots import make_subplots
 
 # Data Loading Functions
 @st.cache_data
@@ -758,49 +759,154 @@ def plot_vessel_efficiency_chart(
     daily_data: pd.DataFrame
 ) -> go.Figure:
     """
-    Create efficiency analysis chart
+    Create efficiency analysis chart with a single figure
     """
-    # Create subplot with shared x-axis
-    fig = make_subplots(
-        rows=2, cols=1,
-        shared_xaxis=True,
-        subplot_titles=('Power Distribution', 'System Efficiencies')
-    )
+    fig = go.Figure()
     
-    # Power distribution pie chart
-    fig.add_trace(
-        go.Pie(
-            labels=["Base", "Reliquefaction", "Engine", "Auxiliary"],
-            values=[
-                power_data['base_power'],
-                power_data['reliq_power'],
-                power_data['engine_power'],
-                power_data['auxiliary_power']
-            ],
-            name="Power Distribution"
-        ),
-        row=1, col=1
-    )
+    # Add power distribution as pie chart
+    fig.add_trace(go.Pie(
+        labels=["Base", "Reliquefaction", "Engine", "Auxiliary"],
+        values=[
+            power_data['base_power'],
+            power_data['reliq_power'],
+            power_data['engine_power'],
+            power_data['auxiliary_power']
+        ],
+        name="Power Distribution",
+        domain={'x': [0, 0.5], 'y': [0, 1]},
+        hole=.3
+    ))
     
-    # Efficiency trends
-    fig.add_trace(
-        go.Scatter(
-            x=daily_data['day'],
-            y=daily_data['tank_level'],
-            name="Tank Level",
-            line=dict(color='blue')
-        ),
-        row=2, col=1
-    )
+    # Add efficiency trends as line chart
+    fig.add_trace(go.Scatter(
+        x=daily_data['day'],
+        y=daily_data['tank_level'],
+        name="Tank Level",
+        line=dict(color='blue'),
+        domain={'x': [0.6, 1], 'y': [0, 1]}
+    ))
     
+    # Update layout
     fig.update_layout(
-        height=800,
-        title_text=f"{vessel_type} Vessel Efficiency Analysis",
+        title=f"{vessel_type} Vessel Efficiency Analysis",
+        height=500,
+        showlegend=True,
+        annotations=[
+            dict(
+                x=0.25,
+                y=1.1,
+                text="Power Distribution",
+                showarrow=False,
+                font=dict(size=14)
+            ),
+            dict(
+                x=0.80,
+                y=1.1,
+                text="Tank Level Trend",
+                showarrow=False,
+                font=dict(size=14)
+            )
+        ]
+    )
+    
+    return fig
+
+def create_stacked_efficiency_chart(daily_data: pd.DataFrame) -> go.Figure:
+    """
+    Create stacked area chart for efficiency metrics
+    """
+    fig = go.Figure()
+    
+    # Add efficiency metrics
+    fig.add_trace(go.Scatter(
+        x=daily_data['day'],
+        y=daily_data['pressure_factor'],
+        name='Pressure Effect',
+        mode='lines',
+        stackgroup='one',
+        groupnorm='percent'
+    ))
+    
+    fig.add_trace(go.Scatter(
+        x=daily_data['day'],
+        y=daily_data['temp_factor'],
+        name='Temperature Effect',
+        mode='lines',
+        stackgroup='one'
+    ))
+    
+    fig.add_trace(go.Scatter(
+        x=daily_data['day'],
+        y=daily_data['wave_factor'],
+        name='Wave Effect',
+        mode='lines',
+        stackgroup='one'
+    ))
+    
+    # Update layout
+    fig.update_layout(
+        title="Efficiency Factors Over Time",
+        xaxis_title="Days",
+        yaxis_title="Contribution (%)",
+        hovermode='x unified',
         showlegend=True
     )
     
     return fig
 
+def plot_combined_metrics(
+    daily_data: pd.DataFrame,
+    power_data: dict,
+    economics: dict
+) -> go.Figure:
+    """
+    Create comprehensive metrics visualization
+    """
+    fig = go.Figure()
+    
+    # Add BOG metrics
+    fig.add_trace(go.Scatter(
+        x=daily_data['day'],
+        y=daily_data['bog_rate'],
+        name='BOG Rate',
+        line=dict(color='red')
+    ))
+    
+    # Add power metrics
+    fig.add_trace(go.Scatter(
+        x=daily_data['day'],
+        y=[power_data['total_power']] * len(daily_data),
+        name='Power Consumption',
+        line=dict(color='blue', dash='dash')
+    ))
+    
+    # Add economic metrics
+    cumulative_benefit = np.cumsum(
+        [economics['net_benefit'] / len(daily_data)] * len(daily_data)
+    )
+    fig.add_trace(go.Scatter(
+        x=daily_data['day'],
+        y=cumulative_benefit,
+        name='Cumulative Benefit',
+        line=dict(color='green'),
+        yaxis='y2'
+    ))
+    
+    # Update layout
+    fig.update_layout(
+        title="Combined Performance Metrics",
+        xaxis_title="Days",
+        yaxis_title="BOG Rate (%) / Power (MW)",
+        yaxis2=dict(
+            title="Cumulative Benefit ($)",
+            overlaying='y',
+            side='right'
+        ),
+        hovermode='x unified',
+        showlegend=True
+    )
+    
+    return fig
 
 def create_voyage_section_enhanced(
     leg_type: str, 
