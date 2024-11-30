@@ -312,13 +312,33 @@ def route_distance(origin, destination, world_ports_data):
         st.error(f"Error calculating distance: {str(e)}")
         return 0.0
 
-def create_voyage_section_enhanced(leg_type: str, 
-                                 world_ports_data: pd.DataFrame,
-                                 vessel_config: dict, 
-                                 is_ballast: bool = False) -> dict:
-    """Enhanced voyage section with comprehensive calculations"""
+def create_voyage_section_enhanced(
+    leg_type: str, 
+    world_ports_data: pd.DataFrame,
+    vessel_config: dict, 
+    is_ballast: bool = False
+) -> dict:
+    """
+    Enhanced voyage section with comprehensive calculations
+    Returns a dictionary containing all voyage data and calculations
+    """
+    # Initialize return data structure
+    return_data = {
+        'voyage_from': '',
+        'voyage_to': '',
+        'distance': 0.0,
+        'voyage_days': 0.0,
+        'initial_cargo': 0.0,
+        'bog_rate': 0.0,
+        'economics': None,
+        'power_reqs': None,
+        'bog_data': None,
+        'total_bog_generated': 0.0
+    }
+
     st.subheader(f"{leg_type} Leg Details")
     
+    # Create tabs for organization
     tabs = st.tabs([
         "Cargo & Route",
         "Environmental",
@@ -327,10 +347,12 @@ def create_voyage_section_enhanced(leg_type: str,
         "Economics",
         "Results"
     ])
-    
+
     # Cargo & Route Tab
     with tabs[0]:
         col1, col2, col3 = st.columns(3)
+        
+        # Cargo Volume Input
         with col1:
             if not is_ballast:
                 initial_cargo = st.number_input(
@@ -350,26 +372,41 @@ def create_voyage_section_enhanced(leg_type: str,
                     step=100.0,
                     key=f"{leg_type}_heel"
                 )
-        
+            return_data['initial_cargo'] = initial_cargo
+
+        # Port Selection
         with col2:
-            voyage_from = st.text_input("From Port", key=f"{leg_type}_from")
-            
-        with col3:
-            voyage_to = st.text_input("To Port", key=f"{leg_type}_to")
-            
-        distance = route_distance(voyage_from, voyage_to, world_ports_data)
-        speed = st.number_input(
-            "Speed (knots)",
-            min_value=1.0,
-            max_value=25.0,
-            value=15.0,
-            step=0.1,
-            key=f"{leg_type}_speed"
-        )
+            voyage_from = st.text_input(
+                "From Port", 
+                key=f"{leg_type}_from"
+            )
+            return_data['voyage_from'] = voyage_from
         
-        voyage_days = float(distance) / (float(speed) * 24.0) if speed > 0 else 0.0
-        st.metric("Estimated Voyage Days", f"{voyage_days:.1f}")
-    
+        with col3:
+            voyage_to = st.text_input(
+                "To Port", 
+                key=f"{leg_type}_to"
+            )
+            return_data['voyage_to'] = voyage_to
+
+        # Calculate Distance and Days
+        if voyage_from and voyage_to:
+            distance = route_distance(voyage_from, voyage_to, world_ports_data)
+            return_data['distance'] = distance
+            
+            speed = st.number_input(
+                "Speed (knots)",
+                min_value=1.0,
+                max_value=25.0,
+                value=15.0,
+                step=0.1,
+                key=f"{leg_type}_speed"
+            )
+            
+            voyage_days = float(distance) / (float(speed) * 24.0) if speed > 0 else 0.0
+            return_data['voyage_days'] = voyage_days
+            st.metric("Estimated Voyage Days", f"{voyage_days:.1f}")
+
     # Environmental Tab
     with tabs[1]:
         col1, col2 = st.columns(2)
@@ -407,29 +444,11 @@ def create_voyage_section_enhanced(leg_type: str,
                 options=['Low', 'Medium', 'High'],
                 key=f"{leg_type}_solar"
             )
+
     # BOG Management Tab
     with tabs[2]:
         col1, col2 = st.columns(2)
         with col1:
-            st.write("#### BOG Generation Parameters")
-            bog_management_mode = st.selectbox(
-                "BOG Management Mode",
-                options=['Auto-Optimize', 'Manual Control'],
-                key=f"{leg_type}_bog_mode"
-            )
-            
-            if bog_management_mode == 'Manual Control':
-                reliq_priority = st.slider(
-                    "Reliquefaction Priority",
-                    min_value=0.0,
-                    max_value=1.0,
-                    value=0.7,
-                    step=0.1,
-                    key=f"{leg_type}_reliq_priority"
-                )
-            else:
-                reliq_priority = 0.7  # Auto-optimized default
-            
             reliq_capacity = st.number_input(
                 "Reliquefaction Capacity (tons/hour)",
                 min_value=0.0,
@@ -440,13 +459,6 @@ def create_voyage_section_enhanced(leg_type: str,
             )
         
         with col2:
-            st.write("#### Engine Consumption Parameters")
-            engine_config = st.selectbox(
-                "Engine Configuration",
-                options=['Optimal', 'Maximum Gas Mode', 'Minimum Gas Mode'],
-                key=f"{leg_type}_engine_config"
-            )
-            
             engine_consumption = st.number_input(
                 "Engine Gas Consumption (m³/day)",
                 min_value=0.0,
@@ -455,151 +467,113 @@ def create_voyage_section_enhanced(leg_type: str,
                 step=1.0,
                 key=f"{leg_type}_consumption"
             )
-    
-    # Power & Efficiency Tab
-    with tabs[3]:
-        col1, col2 = st.columns(2)
-        with col1:
-            st.write("#### Power Requirements")
-            base_power_needed = st.number_input(
-                "Base Power Required (MW)",
-                min_value=float(vessel_config['power_output']['calm']),
-                max_value=float(vessel_config['power_output'].get('adverse', 40.0)),
-                value=float(vessel_config['power_output']['calm']),
-                step=0.1,
-                key=f"{leg_type}_base_power"
-            )
-            
-            reliq_efficiency = st.number_input(
-                "Reliquefaction Plant Efficiency (%)",
-                min_value=60.0,
-                max_value=95.0,
-                value=90.0,
-                step=0.1,
-                key=f"{leg_type}_reliq_eff"
-            ) / 100.0
-        
-        with col2:
-            st.write("#### Efficiency Metrics")
-            power_consumption = st.number_input(
-                "Power Consumption (kWh/kg BOG)",
-                min_value=0.5,
-                max_value=1.0,
-                value=0.75,
-                step=0.01,
-                key=f"{leg_type}_power_consumption"
-            )
-    
-    # Economics Tab
-    with tabs[4]:
-        col1, col2 = st.columns(2)
-        with col1:
-            st.write("#### Price Inputs")
-            lng_price = st.number_input(
-                "LNG Price ($/mmBTU)",
-                min_value=0.0,
-                max_value=50.0,
-                value=15.0,
-                step=0.1,
-                key=f"{leg_type}_lng_price"
-            )
-            
-            bunker_price = st.number_input(
-                "Bunker Price ($/mt)",
-                min_value=0.0,
-                max_value=2000.0,
-                value=800.0,
-                step=1.0,
-                key=f"{leg_type}_bunker"
-            )
-        
-        with col2:
-            st.write("#### Operating Costs")
-            electricity_cost = st.number_input(
-                "Electricity Cost ($/kWh)",
-                min_value=0.0,
-                max_value=1.0,
-                value=0.15,
-                step=0.01,
-                key=f"{leg_type}_electricity"
-            )
-            
-            carbon_price = st.number_input(
-                "Carbon Price ($/ton CO2)",
-                min_value=0.0,
-                max_value=200.0,
-                value=30.0,
-                step=1.0,
-                key=f"{leg_type}_carbon"
-            )
-    
-    # Results Tab
-    daily_data = None
-    economics = None
-    
-    with tabs[5]:
-        if voyage_days > 0:
-            # Calculate BOG rate and generation
-            bog_rate = calculate_enhanced_bog_rate(
-                vessel_config['base_bog_rate'],
-                tank_pressure,
-                100.0,  # Initial tank level
-                ambient_temp,
-                wave_height,
-                solar_radiation,
-                vessel_type="MEGI" if 'MEGI' in vessel_config else "DFDE",
-                is_ballast=is_ballast
-            )
-            
-            # Calculate power requirements
-            power_reqs = calculate_power_requirements(
-                vessel_type="MEGI" if 'MEGI' in vessel_config else "DFDE",
-                bog_generated=initial_cargo * bog_rate / 100.0,
-                reliq_capacity=reliq_capacity,
-                ambient_temp=ambient_temp,
-                wave_height=wave_height
-            )
-            
-            # Calculate economics
-            economics = calculate_economic_metrics(
-                vessel_type="MEGI" if 'MEGI' in vessel_config else "DFDE",
-                power_requirements=power_reqs,
-                bog_generated=initial_cargo * bog_rate / 100.0,
-                bog_reliquefied=min(initial_cargo * bog_rate / 100.0, reliq_capacity * 24),
-                lng_price=lng_price,
-                bunker_price=bunker_price,
-                electricity_cost=electricity_cost,
-                voyage_days=voyage_days
-            )
-            
-            # Display Results
+
+    # Perform calculations if we have valid voyage days
+    if voyage_days > 0:
+        # Calculate BOG rate
+        bog_rate = calculate_enhanced_bog_rate(
+            vessel_config['base_bog_rate'],
+            tank_pressure,
+            100.0,  # Initial tank level
+            ambient_temp,
+            wave_height,
+            solar_radiation,
+            vessel_type="MEGI" if 'MEGI' in vessel_config else "DFDE",
+            is_ballast=is_ballast
+        )
+        return_data['bog_rate'] = bog_rate
+
+        # Calculate daily BOG generation
+        daily_bog = initial_cargo * bog_rate / 100.0
+        return_data['total_bog_generated'] = daily_bog * voyage_days
+
+        # Calculate power requirements
+        power_reqs = calculate_power_requirements(
+            vessel_type="MEGI" if 'MEGI' in vessel_config else "DFDE",
+            bog_generated=daily_bog,
+            reliq_capacity=reliq_capacity,
+            ambient_temp=ambient_temp,
+            wave_height=wave_height
+        )
+        return_data['power_reqs'] = power_reqs
+
+        # Calculate BOG distribution
+        bog_data = {
+            'bog_reliquefied': min(daily_bog, reliq_capacity * 24),
+            'bog_consumed': min(daily_bog, engine_consumption),
+            'bog_to_gcu': max(0, daily_bog - reliq_capacity * 24 - engine_consumption)
+        }
+        return_data['bog_data'] = bog_data
+
+        # Calculate economics if prices are provided
+        if 'Economics' in tabs:
+            with tabs[4]:
+                col1, col2 = st.columns(2)
+                with col1:
+                    lng_price = st.number_input(
+                        "LNG Price ($/mmBTU)",
+                        min_value=0.0,
+                        max_value=50.0,
+                        value=15.0,
+                        step=0.1,
+                        key=f"{leg_type}_lng_price"
+                    )
+                    bunker_price = st.number_input(
+                        "Bunker Price ($/mt)",
+                        min_value=0.0,
+                        max_value=2000.0,
+                        value=800.0,
+                        step=1.0,
+                        key=f"{leg_type}_bunker"
+                    )
+                with col2:
+                    electricity_cost = st.number_input(
+                        "Electricity Cost ($/kWh)",
+                        min_value=0.0,
+                        max_value=1.0,
+                        value=0.15,
+                        step=0.01,
+                        key=f"{leg_type}_electricity"
+                    )
+
+                economics = calculate_economic_metrics(
+                    vessel_type="MEGI" if 'MEGI' in vessel_config else "DFDE",
+                    power_requirements=power_reqs,
+                    bog_generated=daily_bog,
+                    bog_reliquefied=bog_data['bog_reliquefied'],
+                    lng_price=lng_price,
+                    bunker_price=bunker_price,
+                    electricity_cost=electricity_cost,
+                    voyage_days=voyage_days
+                )
+                return_data['economics'] = economics
+
+        # Display Results
+        with tabs[5]:
             st.write("### Performance Metrics")
             
             col1, col2, col3 = st.columns(3)
             with col1:
                 st.metric("BOG Rate (%/day)", f"{bog_rate:.3f}")
-                st.metric("Total BOG Generated (m³)", 
-                         f"{initial_cargo * bog_rate * voyage_days / 100.0:.1f}")
+                st.metric("Total BOG Generated (m³)", f"{return_data['total_bog_generated']:.1f}")
             
             with col2:
                 st.metric("Power Consumption (MW)", f"{power_reqs['total_power']:.1f}")
                 st.metric("Reliquefaction Power (MW)", f"{power_reqs['reliq_power']:.1f}")
             
-            with col3:
-                st.metric("Net Benefit ($)", f"{economics['net_benefit']:,.2f}")
-                st.metric("Emissions Value ($)", f"{economics['emissions_value']:,.2f}")
+            if return_data.get('economics'):
+                with col3:
+                    st.metric("Net Benefit ($)", f"{return_data['economics']['net_benefit']:,.2f}")
+                    st.metric("Emissions Value ($)", f"{return_data['economics']['emissions_value']:,.2f}")
             
             # Visualizations
-            st.write("### BOG Flow Distribution")
-            bog_data = {
-                'bog_reliquefied': min(initial_cargo * bog_rate / 100.0, reliq_capacity * 24),
-                'bog_consumed': min(initial_cargo * bog_rate / 100.0, engine_consumption),
-                'bog_to_gcu': max(0, initial_cargo * bog_rate / 100.0 - 
-                                reliq_capacity * 24 - engine_consumption)
-            }
-            
-            st.plotly_chart(create_sankey_diagram(bog_data), use_container_width=True)
-            st.plotly_chart(create_power_distribution_chart(power_reqs), use_container_width=True)
+            if return_data.get('bog_data'):
+                st.write("### BOG Flow Distribution")
+                st.plotly_chart(create_sankey_diagram(return_data['bog_data']), use_container_width=True)
+                st.plotly_chart(create_power_distribution_chart(power_reqs), use_container_width=True)
+
+    return return_data
+    
 
 def show_bog_calculator():
     """Main function to show enhanced BOG calculator"""
@@ -615,118 +589,185 @@ def show_bog_calculator():
         - Economic impact assessment
         - Environmental considerations
         
-        Supports both MEGI and DFDE vessel types with specific operational parameters.
+        Features:
+        - Supports both MEGI and DFDE vessel types
+        - Real-time BOG calculations
+        - Economic analysis with multiple factors
+        - Visualizations of BOG flow and power distribution
         """)
     
-    # Load data and configurations
-    world_ports_data = load_world_ports()
-    vessel_configs = get_vessel_configs()
-    
-    # Vessel Configuration Section
-    st.sidebar.title("Vessel Configuration")
-    vessel_type = st.sidebar.selectbox(
-        "Select Vessel Type",
-        options=list(vessel_configs.keys())
-    )
-    vessel_config = vessel_configs[vessel_type]
-    
-    # Display vessel specifications
-    with st.expander("Vessel Technical Specifications"):
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.write("#### Capacity & Efficiency")
-            st.write(f"Tank Capacity: {vessel_config['tank_capacity']:,} m³")
-            st.write(f"Base BOG Rate: {vessel_config['base_bog_rate']}%")
-            st.write(f"Engine Efficiency: {vessel_config['engine_efficiency']*100}%")
+    try:
+        # Load data and configurations
+        world_ports_data = load_world_ports()
+        vessel_configs = get_vessel_configs()
         
-        with col2:
-            st.write("#### Consumption & Power")
-            st.write(f"Daily Consumption: {vessel_config['daily_consumption']:,} tons")
-            st.write(f"Reliq Capacity: {vessel_config['reliq_capacity']} tons/hour")
-            if 'emissions_reduction' in vessel_config:
-                st.write(f"Emissions Reduction: {vessel_config['emissions_reduction']*100}%")
+        # Vessel Configuration Section
+        st.sidebar.title("Vessel Configuration")
+        vessel_type = st.sidebar.selectbox(
+            "Select Vessel Type",
+            options=list(vessel_configs.keys())
+        )
+        vessel_config = vessel_configs[vessel_type]
         
-        with col3:
-            st.write("#### Operating Parameters")
-            st.write(f"Min Heel: {vessel_config['min_heel']:,} m³")
-            st.write(f"Max Heel: {vessel_config['max_heel']:,} m³")
-            if 'power_output' in vessel_config:
-                st.write(f"Max Power Output: {vessel_config['power_output'].get('max', 40)} MW")
-    
-    st.markdown("---")
-    
-    # Create voyage sections
-    laden_data = create_voyage_section_enhanced("Laden", world_ports_data, vessel_config)
-    st.markdown("---")
-    ballast_data = create_voyage_section_enhanced("Ballast", world_ports_data, vessel_config, True)
-    
-    # Map visualization
-    if laden_data['voyage_from'] and laden_data['voyage_to'] and \
-       ballast_data['voyage_from'] and ballast_data['voyage_to']:
-        st.markdown("---")
-        st.subheader("Route Visualization")
-        
-        laden_ports = [laden_data['voyage_from'], laden_data['voyage_to']]
-        ballast_ports = [ballast_data['voyage_from'], ballast_data['voyage_to']]
-        
-        route_map = plot_combined_route(laden_ports, ballast_ports, world_ports_data)
-        st_folium(route_map, width=800, height=500)
-        
-        # Overall voyage statistics
-        if laden_data.get('economics') and ballast_data.get('economics'):
-            st.markdown("### Total Voyage Analysis")
-            
-            col1, col2, col3, col4 = st.columns(4)
+        # Display vessel specifications
+        with st.expander("Vessel Technical Specifications"):
+            col1, col2, col3 = st.columns(3)
             with col1:
-                total_distance = laden_data['distance'] + ballast_data['distance']
-                st.metric("Total Distance", f"{total_distance:,.0f} NM")
+                st.write("#### Capacity & Efficiency")
+                st.write(f"Tank Capacity: {vessel_config['tank_capacity']:,} m³")
+                st.write(f"Base BOG Rate: {vessel_config['base_bog_rate']}%")
+                st.write(f"Engine Efficiency: {vessel_config['engine_efficiency']*100}%")
             
             with col2:
-                total_benefit = (laden_data['economics']['net_benefit'] + 
-                               ballast_data['economics']['net_benefit'])
-                st.metric("Total Economic Benefit", f"${total_benefit:,.2f}")
+                st.write("#### Consumption & Power")
+                st.write(f"Daily Consumption: {vessel_config['daily_consumption']:,} tons")
+                st.write(f"Reliq Capacity: {vessel_config['reliq_capacity']} tons/hour")
+                if 'emissions_reduction' in vessel_config:
+                    st.write(f"Emissions Reduction: {vessel_config['emissions_reduction']*100}%")
             
             with col3:
-                total_emissions_value = (laden_data['economics']['emissions_value'] + 
-                                      ballast_data['economics']['emissions_value'])
-                st.metric("Environmental Value", f"${total_emissions_value:,.2f}")
+                st.write("#### Operating Parameters")
+                st.write(f"Min Heel: {vessel_config['min_heel']:,} m³")
+                st.write(f"Max Heel: {vessel_config['max_heel']:,} m³")
+                if 'power_output' in vessel_config:
+                    if vessel_type == "MEGI":
+                        st.write(f"Base Power: {vessel_config['power_output']['calm']} MW")
+                    else:
+                        st.write(f"Max Power: {vessel_config['power_output'].get('max', 40)} MW")
+        
+        st.markdown("---")
+        
+        # Create voyage sections
+        laden_data = create_voyage_section_enhanced("Laden", world_ports_data, vessel_config)
+        st.markdown("---")
+        ballast_data = create_voyage_section_enhanced("Ballast", world_ports_data, vessel_config, True)
+        
+        # Map and Summary section
+        if (laden_data.get('voyage_from') and laden_data.get('voyage_to') and 
+            ballast_data.get('voyage_from') and ballast_data.get('voyage_to')):
+            st.markdown("---")
+            st.subheader("Route Visualization and Voyage Summary")
             
-            with col4:
-                total_savings = total_benefit + total_emissions_value
-                st.metric("Total Value Generated", f"${total_savings:,.2f}")
+            # Route visualization
+            laden_ports = [laden_data['voyage_from'], laden_data['voyage_to']]
+            ballast_ports = [ballast_data['voyage_from'], ballast_data['voyage_to']]
             
-            # Generate downloadable report
-            if st.button("Generate Voyage Report"):
-                report_data = {
-                    'Voyage Summary': {
-                        'Total Distance (NM)': f"{total_distance:,.0f}",
-                        'Total Economic Benefit ($)': f"{total_benefit:,.2f}",
-                        'Environmental Value ($)': f"{total_emissions_value:,.2f}",
-                        'Total Value Generated ($)': f"{total_savings:,.2f}"
-                    },
-                    'Laden Voyage': {
-                        'From': laden_data['voyage_from'],
-                        'To': laden_data['voyage_to'],
-                        'Distance (NM)': f"{laden_data['distance']:,.0f}",
-                        'Economic Benefit ($)': f"{laden_data['economics']['net_benefit']:,.2f}",
-                        'Environmental Value ($)': f"{laden_data['economics']['emissions_value']:,.2f}"
-                    },
-                    'Ballast Voyage': {
-                        'From': ballast_data['voyage_from'],
-                        'To': ballast_data['voyage_to'],
-                        'Distance (NM)': f"{ballast_data['distance']:,.0f}",
-                        'Economic Benefit ($)': f"{ballast_data['economics']['net_benefit']:,.2f}",
-                        'Environmental Value ($)': f"{ballast_data['economics']['emissions_value']:,.2f}"
-                    }
-                }
+            route_map = plot_combined_route(laden_ports, ballast_ports, world_ports_data)
+            st_folium(route_map, width=800, height=500)
+            
+            # Overall voyage statistics
+            if laden_data.get('economics') and ballast_data.get('economics'):
+                st.markdown("### Total Voyage Analysis")
                 
-                report_df = pd.DataFrame.from_dict(report_data, orient='index')
-                st.download_button(
-                    label="Download Detailed Report",
-                    data=report_df.to_csv().encode('utf-8'),
-                    file_name='voyage_optimization_report.csv',
-                    mime='text/csv',
-                )
+                col1, col2, col3, col4 = st.columns(4)
+                
+                # Distance metrics
+                total_distance = laden_data['distance'] + ballast_data['distance']
+                with col1:
+                    st.metric(
+                        "Total Distance", 
+                        f"{total_distance:,.0f} NM",
+                        help="Combined distance for laden and ballast voyages"
+                    )
+                
+                # Economic metrics
+                total_benefit = (laden_data['economics']['net_benefit'] + 
+                               ballast_data['economics']['net_benefit'])
+                with col2:
+                    st.metric(
+                        "Total Economic Benefit", 
+                        f"${total_benefit:,.2f}",
+                        help="Combined economic benefits including fuel savings and LNG value"
+                    )
+                
+                # Environmental metrics
+                total_emissions_value = (laden_data['economics']['emissions_value'] + 
+                                       ballast_data['economics']['emissions_value'])
+                with col3:
+                    st.metric(
+                        "Environmental Value", 
+                        f"${total_emissions_value:,.2f}",
+                        help="Value of emissions reduction based on carbon credits"
+                    )
+                
+                # Total value metrics
+                total_savings = total_benefit + total_emissions_value
+                with col4:
+                    st.metric(
+                        "Total Value Generated", 
+                        f"${total_savings:,.2f}",
+                        help="Combined economic and environmental benefits"
+                    )
+                
+                # Additional summary metrics
+                st.markdown("### Detailed Analysis")
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.write("#### BOG Management")
+                    total_bog = (laden_data['total_bog_generated'] + 
+                               ballast_data['total_bog_generated'])
+                    st.metric("Total BOG Generated", f"{total_bog:,.1f} m³")
+                    
+                    if laden_data.get('bog_data') and ballast_data.get('bog_data'):
+                        total_reliquefied = (laden_data['bog_data']['bog_reliquefied'] + 
+                                           ballast_data['bog_data']['bog_reliquefied'])
+                        st.metric("Total BOG Reliquefied", f"{total_reliquefied:,.1f} m³")
+                
+                with col2:
+                    st.write("#### Power Consumption")
+                    if laden_data.get('power_reqs') and ballast_data.get('power_reqs'):
+                        avg_power = (laden_data['power_reqs']['total_power'] + 
+                                   ballast_data['power_reqs']['total_power']) / 2
+                        st.metric("Average Power Consumption", f"{avg_power:,.1f} MW")
+                
+                # Generate downloadable report
+                if st.button("Generate Voyage Report"):
+                    report_data = create_voyage_report(
+                        laden_data, ballast_data, 
+                        total_distance, total_benefit, 
+                        total_emissions_value, total_savings
+                    )
+                    st.download_button(
+                        label="Download Detailed Report",
+                        data=report_data.to_csv().encode('utf-8'),
+                        file_name='voyage_optimization_report.csv',
+                        mime='text/csv',
+                    )
+    
+    except Exception as e:
+        st.error(f"An error occurred: {str(e)}")
+        st.info("Please check your inputs and try again.")
+
+def create_voyage_report(laden_data, ballast_data, total_distance, 
+                        total_benefit, total_emissions_value, total_savings):
+    """Create a comprehensive voyage report"""
+    report_data = {
+        'Voyage Summary': {
+            'Total Distance (NM)': f"{total_distance:,.0f}",
+            'Total Economic Benefit ($)': f"{total_benefit:,.2f}",
+            'Environmental Value ($)': f"{total_emissions_value:,.2f}",
+            'Total Value Generated ($)': f"{total_savings:,.2f}"
+        },
+        'Laden Voyage': {
+            'From': laden_data['voyage_from'],
+            'To': laden_data['voyage_to'],
+            'Distance (NM)': f"{laden_data['distance']:,.0f}",
+            'BOG Rate (%/day)': f"{laden_data.get('bog_rate', 0):,.3f}",
+            'Economic Benefit ($)': f"{laden_data['economics']['net_benefit']:,.2f}",
+            'Environmental Value ($)': f"{laden_data['economics']['emissions_value']:,.2f}"
+        },
+        'Ballast Voyage': {
+            'From': ballast_data['voyage_from'],
+            'To': ballast_data['voyage_to'],
+            'Distance (NM)': f"{ballast_data['distance']:,.0f}",
+            'BOG Rate (%/day)': f"{ballast_data.get('bog_rate', 0):,.3f}",
+            'Economic Benefit ($)': f"{ballast_data['economics']['net_benefit']:,.2f}",
+            'Environmental Value ($)': f"{ballast_data['economics']['emissions_value']:,.2f}"
+        }
+    }
+    
+    return pd.DataFrame.from_dict(report_data, orient='index')
 
 def main():
     """Main application entry point"""
