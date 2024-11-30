@@ -195,30 +195,60 @@ def calculate_base_power(
 
 @st.cache_data
 def get_vessel_configs():
-    """Get comprehensive vessel configuration data with dynamic calculations"""
-    base_configs = {
+    """Get comprehensive vessel configuration data"""
+    return {
         "MEGI": {
             "tank_capacity": 174000.0,
+            "min_heel": 1500.0,
+            "max_heel": 3000.0,
             "base_bog_rate": 0.14,  # 0.14% per day
-            "base_efficiency": 0.78,  # 78% efficiency
-            "daily_consumption": 100.0,  # tons per day
             "reliq_capacity": 3.0,   # tons per hour
+            "engine_efficiency": 0.78,  # 78% efficiency
+            "thermal_efficiency": 0.47, # 47% thermal efficiency
+            "daily_consumption": 100.0,  # tons per day
+            "power_output": {
+                "calm": 27.0,  # MW
+                "adverse": 29.0  # MW
+            },
+            "reliq_power": {
+                "min": 3.0,  # MW
+                "max": 5.8   # MW
+            },
             "emissions_reduction": 0.22,  # 22% lower than conventional
             "reliq_efficiency": 0.90,  # 90% BOG processing
-            "power_consumption": 0.75  # kWh/kg BOG
+            "power_consumption": 0.75,  # kWh/kg BOG
+            "specifications": {
+                "propulsion": "ME-GI Engine",
+                "reliquefaction": "Partial Reliquefaction",
+                "fuel_type": "Dual Fuel"
+            }
         },
         "DFDE": {
             "tank_capacity": 180000.0,
+            "min_heel": 1600.0,
+            "max_heel": 3200.0,
             "base_bog_rate": 0.15,
-            "base_efficiency": 0.47,  # 47% thermal efficiency
-            "daily_consumption": 130.0,  # tons per day
             "reliq_capacity": 2.8,
+            "engine_efficiency": 0.47,  # 47% thermal efficiency
+            "daily_consumption": 130.0,  # tons per day
+            "power_output": {
+                "max": 40.0,  # MW at peak
+                "nbog_laden": 20.0,  # MW from NBOG
+                "nbog_ballast": 11.0  # MW from NBOG
+            },
+            "thermal_efficiency": 0.47,  # 47% thermal efficiency
             "bog_rates": {
                 "laden": 0.15,  # % per day
                 "ballast": 0.06  # % per day
+            },
+            "specifications": {
+                "propulsion": "Dual Fuel Diesel Electric",
+                "reliquefaction": "None",
+                "fuel_type": "Dual Fuel"
             }
         }
     }
+
     
     # Calculate heel requirements for each vessel type
     for vessel_type, config in base_configs.items():
@@ -251,6 +281,63 @@ def get_vessel_configs():
             }
     
     return base_configs
+
+def display_vessel_specs(vessel_config):
+    """Display vessel specifications in an organized manner"""
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.write("#### Capacity Specifications")
+        st.write(f"Tank Capacity: {vessel_config['tank_capacity']:,} m³")
+        st.write(f"Base BOG Rate: {vessel_config['base_bog_rate']}%/day")
+        st.write(f"Engine Efficiency: {vessel_config['engine_efficiency']*100:.1f}%")
+        st.write(f"Thermal Efficiency: {vessel_config['thermal_efficiency']*100:.1f}%")
+    
+    with col2:
+        st.write("#### Operating Parameters")
+        st.write(f"Daily Consumption: {vessel_config['daily_consumption']:,} tons")
+        st.write(f"Reliq Capacity: {vessel_config.get('reliq_capacity', 'N/A')} tons/hour")
+        if 'emissions_reduction' in vessel_config:
+            st.write(f"Emissions Reduction: {vessel_config['emissions_reduction']*100:.1f}%")
+    
+    with col3:
+        st.write("#### Technical Specifications")
+        st.write(f"Propulsion: {vessel_config['specifications']['propulsion']}")
+        st.write(f"Reliquefaction: {vessel_config['specifications']['reliquefaction']}")
+        st.write(f"Fuel Type: {vessel_config['specifications']['fuel_type']}")
+
+def show_calculator_info():
+    """Display calculator information"""
+    st.markdown("""
+    ### Advanced BOG and Vessel Performance Calculator
+    
+    This calculator provides comprehensive analysis for LNG vessel operations:
+    
+    * BOG Generation & Management
+        - Real-time BOG rate calculations
+        - Environmental factor adjustments
+        - Tank pressure optimization
+        
+    * Power System Analysis
+        - Engine efficiency calculations
+        - Reliquefaction power requirements
+        - Overall power consumption optimization
+        
+    * Economic Assessment
+        - Voyage cost analysis
+        - Fuel savings calculations
+        - Environmental benefit valuation
+        
+    * Operational Optimization
+        - Heel quantity optimization
+        - Speed and consumption analysis
+        - Weather impact considerations
+        
+    * Environmental Impact
+        - Emissions reduction calculations
+        - Carbon credit valuations
+        - Environmental compliance metrics
+    """)
 
 def calculate_enhanced_bog_rate(
     base_rate: float,
