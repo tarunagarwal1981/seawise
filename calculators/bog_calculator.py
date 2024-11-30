@@ -168,7 +168,9 @@ def calculate_economic_metrics(
                    bunker_price * voyage_days)
     
     # Emissions reduction value (assuming carbon credit price)
-    emissions_reduction = (config['emissions_reduction'] * 
+    # Default emissions reduction for DFDE if not specified
+    emissions_factor = config.get('emissions_reduction', 0.10)  # 10% default for DFDE
+    emissions_reduction = (emissions_factor * 
                          config['daily_consumption'] * 
                          voyage_days * 30.0)  # $30 per ton CO2
     
@@ -180,7 +182,6 @@ def calculate_economic_metrics(
         'net_benefit': float(lng_saved + fuel_savings - 
                            reliq_power_cost + emissions_reduction)
     }
-
 # Visualization Functions
 def create_sankey_diagram(bog_data: dict) -> go.Figure:
     """Create Sankey diagram for BOG flow visualization"""
