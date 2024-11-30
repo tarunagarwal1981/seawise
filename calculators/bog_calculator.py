@@ -151,7 +151,7 @@ def calculate_engine_efficiency(
     - vessel_type: "MEGI" or "DFDE"
     - load_factor: Engine load as fraction (0.0 to 1.0)
     - ambient_temp: Ambient temperature in °C
-    - base_efficiency: Base engine efficiency (e.g., 0.78 for MEGI)
+    - base_efficiency: Base engine efficiency from vessel config
     
     Returns:
     - Actual efficiency as float
@@ -430,7 +430,7 @@ def calculate_power_requirements(
         vessel_type=vessel_type,
         load_factor=load_factor,
         ambient_temp=ambient_temp,
-        base_efficiency=config['base_efficiency']
+        base_efficiency=config['engine_efficiency']  # Changed from base_efficiency
     )
     
     # Calculate reliquefaction power
@@ -467,6 +467,7 @@ def calculate_power_requirements(
             'reliq': float(config.get('reliq_efficiency', 0.0))
         }
     }
+
 
 def calculate_economic_metrics(
     vessel_type: str,
