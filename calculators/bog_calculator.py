@@ -276,6 +276,24 @@ def plot_daily_tracking_enhanced(daily_data: pd.DataFrame) -> go.Figure:
     
     return fig
 
+def route_distance(origin, destination, world_ports_data):
+    """Calculate route distance between two ports"""
+    try:
+        origin_port = world_port_index(origin, world_ports_data)
+        destination_port = world_port_index(destination, world_ports_data)
+        
+        if origin_port is None or destination_port is None:
+            return 0.0
+
+        origin_coords = [float(origin_port['Longitude']), float(origin_port['Latitude'])]
+        destination_coords = [float(destination_port['Longitude']), float(destination_port['Latitude'])]
+        
+        sea_route = sr.searoute(origin_coords, destination_coords, units="naut")
+        return float(sea_route['properties']['length'])
+    except Exception as e:
+        st.error(f"Error calculating distance: {str(e)}")
+        return 0.0
+
 def create_voyage_section_enhanced(leg_type: str, 
                                  world_ports_data: pd.DataFrame,
                                  vessel_config: dict, 
