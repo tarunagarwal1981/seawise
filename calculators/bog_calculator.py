@@ -283,6 +283,56 @@ def get_vessel_configs():
     
     return base_configs
 
+def plot_combined_route(laden_ports, ballast_ports, world_ports_data):
+    """Plot combined route on a single map"""
+    m = folium.Map(location=[0, 0], zoom_start=2)
+    all_ports = laden_ports + ballast_ports
+
+    if len(all_ports) >= 2 and all(all_ports):
+        coordinates = []
+        for i in range(len(all_ports) - 1):
+            try:
+                start_port = world_port_index(all_ports[i], world_ports_data)
+                end_port = world_port_index(all_ports[i + 1], world_ports_data)
+                
+                if start_port is None or end_port is None:
+                    continue
+
+                start_coords = [float(start_port['Latitude']), float(start_port['Longitude'])]
+                end_coords = [float(end_port['Latitude']), float(end_port['Longitude'])]
+                
+                # Add port markers
+                folium.Marker(
+                    start_coords,
+                    popup=all_ports[i],
+                    icon=folium.Icon(color='green' if i == 0 else 'blue')
+                ).add_to(m)
+                
+                if i == len(all_ports) - 2:
+                    folium.Marker(
+                        end_coords,
+                        popup=all_ports[i + 1],
+                        icon=folium.Icon(color='red')
+                    ).add_to(m)
+                
+                # Add route line
+                route = sr.searoute(start_coords[::-1], end_coords[::-1])
+                folium.PolyLine(
+                    locations=[list(reversed(coord)) for coord in route['geometry']['coordinates']], 
+                    color="red",
+                    weight=2,
+                    opacity=0.8
+                ).add_to(m)
+                
+                coordinates.extend([start_coords, end_coords])
+            except Exception as e:
+                st.error(f"Error plotting route: {str(e)}")
+        
+        if coordinates:
+            m.fit_bounds(coordinates)
+    
+    return m
+
 def display_vessel_specs(vessel_config):
     """Display vessel specifications in an organized manner"""
     col1, col2, col3 = st.columns(3)
