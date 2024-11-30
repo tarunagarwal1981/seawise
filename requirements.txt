@@ -9,3 +9,4 @@ searoute
 fuzzywuzzy
 python-Levenshtein
 streamlit-aggrid
+plotly
