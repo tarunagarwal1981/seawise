@@ -434,7 +434,7 @@ def show_cii_calculator():
         
     # Draft Voyage Logic
     if draft_voyage_clicked:
-        vessel_name = "CITY ISLAND"
+        vessel_name = "TRAMMO MARYCAM"
         year = date.today().year
         engine = get_db_engine()
         df = get_vessel_data(engine, vessel_name, year)
